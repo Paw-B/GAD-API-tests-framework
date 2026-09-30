@@ -6,36 +6,39 @@
 
     <groupId>org.example</groupId>
     <artifactId>GAD_API_tests_framework</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
 
     <properties>
+        <maven.compiler.release>25</maven.compiler.release>
         <maven.compiler.source>25</maven.compiler.source>
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <selenium.version>4.44.0</selenium.version>
+        <selenium.version>4.49.0</selenium.version>
         <testng.version>7.12.0</testng.version>
-<!--        <suiteXmlFile>src/test/xxx>-->
-        <allure.version>2.24.0</allure.version>
-        <spotless.version>2.43.0</spotless.version>
-        <aspectj.version>1.9.20.1</aspectj.version>
+        <allure.version>2.31.0</allure.version>
+        <spotless.version>2.45.0</spotless.version>
+        <aspectj.version>1.9.24</aspectj.version>
+        <rest-assured.version>6.0.0</rest-assured.version>
+        <allure-rest-assured.version>2.35.3</allure-rest-assured.version>
+        <owner.version>1.0.12</owner.version>
+        <lombok.version>1.18.48</lombok.version>
+        <log4j.version>2.26.0</log4j.version>
     </properties>
 
     <dependencies>
-        <!-- Source: https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java -->
         <dependency>
             <groupId>org.seleniumhq.selenium</groupId>
             <artifactId>selenium-java</artifactId>
-            <version>4.43.0</version>
+            <version>${selenium.version}</version>
+
             <scope>compile</scope>
         </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.testng/testng -->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>7.12.0</version>
+            <version>${testng.version}</version>
             <scope>test</scope>
         </dependency>
-        <!-- Source: https://allurereport.org/docs/testng/ -->
         <dependency>
             <groupId>io.qameta.allure</groupId>
             <artifactId>allure-testng</artifactId>
@@ -46,18 +49,35 @@
             <artifactId>aspectjweaver</artifactId>
             <version>${aspectj.version}</version>
         </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.projectlombok/lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.46</version>
+            <version>${lombok.version}</version>
+
             <scope>compile</scope>
         </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.apache.logging.log4j/log4j-core -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.26.0</version>
+            <version>${log4j.version}</version>
+
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.aeonbits.owner</groupId>
+            <artifactId>owner</artifactId>
+            <version>${owner.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>${rest-assured.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.qameta.allure</groupId>
+            <artifactId>allure-rest-assured</artifactId>
+            <version>${allure-rest-assured.version}</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
@@ -78,12 +98,19 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.5</version>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.16.0</version>
                 <configuration>
-<!--                    <suiteXmlFiles>-->
-<!--                        <suiteXmlFile>${suiteXmlFile}</suiteXmlFile>-->
-<!--                    </suiteXmlFiles>-->
+                    <release>25</release>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.6.0</version>
+
+                <configuration>
                     <argLine>
                         -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
                     </argLine>
@@ -92,7 +119,8 @@
             <plugin>
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-maven</artifactId>
-                <version>2.12.0</version>
+                <version>2.15.0</version>
+
             </plugin>
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
@@ -100,8 +128,8 @@
                 <version>${spotless.version}</version>
                 <configuration>
                     <java>
-                        <eclipse>  <!-- Replaces default googleJavaFormat -->
-                            <file>${project.basedir}/eclipse-formatter.xml</file>  <!-- Custom XML config -->
+                        <eclipse>
+                            <file>${project.basedir}/eclipse-formatter.xml</file>
                         </eclipse>
                         <importOrder>
                             <file>${project.basedir}/eclipse-formatter.importorder</file>

@@ -1,4 +1,4 @@
 package models.sample_model;
 
-public class SampleRq {
+public class GetUsersRs {
 }
