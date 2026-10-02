@@ -10,12 +10,13 @@ import org.testng.annotations.Test;
 @Test(testName = "Users API Tests")
 public class UsersTest extends BaseTest {
 
-	@Test(testName = "Get 200 status from GET /users")
+	@Test(testName = "Verify GET /users against schema")
 	public void verifyGetUsersResponseAgainstSchema() {
 		Response getUsersResponse = UsersAdapter.getUsersRequest();
 
 		assertTrue(
-				matchesJsonSchemaInClasspath("json_schemas/get_users_schema.json").matches(getUsersResponse.getBody().asString()),
+				matchesJsonSchemaInClasspath("json_schemas/get_users_schema.json")
+						.matches(getUsersResponse.getBody().asString()),
 				"Response for GET /users does not match the schema.");
 	}
 }

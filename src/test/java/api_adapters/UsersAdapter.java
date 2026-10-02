@@ -9,7 +9,7 @@ public class UsersAdapter extends BaseAdapter {
 
 	private static final String PATH = "/api/users";
 
-	@Step("Get 200 from GET /users test")
+	@Step("Send GET /users request")
 	public static Response getUsersRequest() {
 		return given()
 				.baseUri(CONFIG.baseUrl())
