@@ -37,4 +37,17 @@ public class UsersAdapter extends BaseAdapter {
 				.extract()
 				.as(PostUsersRs.class);
 	}
+
+	@Step("Send GET /users/{id} request")
+	public static PostUsersRs getOneUser(int id) {
+		return given()
+				.spec(spec)
+				.log().all()
+				.get(PATH+"/"+id)
+				.then()
+				.spec(ok200or201)
+				.log().all()
+				.extract()
+				.as(PostUsersRs.class);
+	}
 }
