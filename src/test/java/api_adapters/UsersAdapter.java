@@ -43,7 +43,7 @@ public class UsersAdapter extends BaseAdapter {
 		return given()
 				.spec(spec)
 				.log().all()
-				.get(PATH+"/"+id)
+				.get(PATH + "/" + id)
 				.then()
 				.spec(ok200or201)
 				.log().all()

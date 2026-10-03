@@ -33,7 +33,7 @@ public class UsersTest extends BaseTest {
 		NewUserData requestBodyValues = createNewUserData();
 		PostUsersRs createNewUserRs = postCreateNewUser(requestBodyValues);
 
-		assertTrue(createNewUserRs.id>0, "Id was not assigned.");
+		assertTrue(createNewUserRs.id > 0, "Id was not assigned.");
 		assertEquals(createNewUserRs.email, requestBodyValues.getEmail(), "Incorrect email returned.");
 		assertEquals(createNewUserRs.firstname, requestBodyValues.getFirstname(), "Incorrect first name returned.");
 		assertEquals(createNewUserRs.lastname, requestBodyValues.getLastname(), "Incorrect last name returned.");
