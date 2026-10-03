@@ -27,6 +27,7 @@ public class UsersAdapter extends BaseAdapter {
 	public static PostUsersRs createNewUser(PostCreateNewUserRq rq) {
 		return given()
 				.spec(spec)
+				.log().all()
 				.body(gson.toJson(rq))
 				.log().all()
 				.when()
@@ -44,6 +45,22 @@ public class UsersAdapter extends BaseAdapter {
 				.spec(spec)
 				.log().all()
 				.get(PATH + "/" + id)
+				.then()
+				.spec(ok200or201)
+				.log().all()
+				.extract()
+				.as(PostUsersRs.class);
+	}
+
+	@Step("Send PATCH /users/{id} request")
+	public static PostUsersRs patchUser(PostCreateNewUserRq rq, int id, String accessToken) {
+		return given()
+				.spec(spec)
+				.header("Authorization", "Bearer " + accessToken)
+				.log().all()
+				.body(gson.toJson(rq))
+				.log().all()
+				.patch(PATH + "/" + id)
 				.then()
 				.spec(ok200or201)
 				.log().all()
