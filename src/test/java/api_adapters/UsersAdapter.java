@@ -4,6 +4,7 @@ import static io.restassured.RestAssured.given;
 
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
+import models.users.*;
 
 public class UsersAdapter extends BaseAdapter {
 
@@ -12,13 +13,28 @@ public class UsersAdapter extends BaseAdapter {
 	@Step("Send GET /users request")
 	public static Response getUsersRequest() {
 		return given()
-				.baseUri(CONFIG.baseUrl())
-				.log().ifValidationFails()
+				.spec(spec)
+				.log().all()
 				.get(PATH)
 				.then()
-				.spec(ok200)
-				.log().ifValidationFails()
+				.spec(ok200or201)
+				.log().all()
 				.extract()
 				.response();
+	}
+
+	@Step("Send POST /users request")
+	public static PostUsersRs createNewUser(PostCreateNewUserRq rq) {
+		return given()
+				.spec(spec)
+				.body(gson.toJson(rq))
+				.log().all()
+				.when()
+				.post(PATH)
+				.then()
+				.spec(ok200or201)
+				.log().all()
+				.extract()
+				.as(PostUsersRs.class);
 	}
 }
