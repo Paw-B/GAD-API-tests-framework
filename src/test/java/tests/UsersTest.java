@@ -1,6 +1,6 @@
 package tests;
 
-import static api_adapters.UsersAdapter.patchUser;
+import static api_adapters.UsersAdapter.*;
 import static dto.NewUserDataFactory.createNewUserData;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static org.testng.Assert.*;
@@ -52,7 +52,7 @@ public class UsersTest extends BaseTest {
 		PostUsersRs createNewUserRs = postCreateNewUser(requestBodyValues);
 		int idOfCreatedUser = createNewUserRs.id;
 
-		PostUsersRs getOneUser = UsersAdapter.getOneUser(idOfCreatedUser);
+		PostUsersRs getOneUser = getOneUser(idOfCreatedUser);
 		assertEquals(getOneUser.id, idOfCreatedUser, "Incorrect user id returned.");
 		assertEquals(getOneUser.firstname, requestBodyValues.getFirstname(), "Incorrect first name returned.");
 	}
@@ -85,10 +85,32 @@ public class UsersTest extends BaseTest {
 
 		patchUser(createNewDataForUser, idOfCreatedUser, authToken);
 
-		PostUsersRs getUpdatedUser = UsersAdapter.getOneUser(idOfCreatedUser);
+		PostUsersRs getUpdatedUser = getOneUser(idOfCreatedUser);
 
 		assertEquals(getUpdatedUser.firstname, requestBodyValuesForNewUser.getFirstname(),
 				"First name was not patched");
 		assertEquals(getUpdatedUser.avatar, requestBodyValuesForNewUser.getAvatar(), "Avatar was not patched");
+	}
+
+	@Feature("Users")
+	@Severity(SeverityLevel.CRITICAL)
+	@Test(testName = "Verify DELETE /users/{id} deletes user", priority = 4)
+	public void deleteNewlyCreatedUser() {
+		NewUserData requestBodyValues = createNewUserData();
+		PostUsersRs createNewUserRs = postCreateNewUser(requestBodyValues);
+		int idOfCreatedUser = createNewUserRs.id;
+
+		LoginRq loginRq = LoginRq
+				.builder()
+				.email(requestBodyValues.getEmail())
+				.password(requestBodyValues.getPassword())
+				.build();
+
+		String authToken = LoginAdapter.postLogin(loginRq).access_token;
+
+		int statusCode = deleteUser(idOfCreatedUser, authToken);
+
+		assertEquals(statusCode, 200, "Delete user failed");
+		assertEquals(getOneUserWhichIsDeleted(idOfCreatedUser), 404, "Delete user failed");
 	}
 }

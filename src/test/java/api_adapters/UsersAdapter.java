@@ -53,8 +53,8 @@ public class UsersAdapter extends BaseAdapter {
 	}
 
 	@Step("Send PATCH /users/{id} request")
-	public static PostUsersRs patchUser(PostCreateNewUserRq rq, int id, String accessToken) {
-		return given()
+	public static void patchUser(PostCreateNewUserRq rq, int id, String accessToken) {
+		given()
 				.spec(spec)
 				.header("Authorization", "Bearer " + accessToken)
 				.log().all()
@@ -63,8 +63,32 @@ public class UsersAdapter extends BaseAdapter {
 				.patch(PATH + "/" + id)
 				.then()
 				.spec(ok200or201)
+				.log().all();
+	}
+
+	@Step("Send DELETE /users/{id} request")
+	public static int deleteUser(int id, String accessToken) {
+		return given()
+				.spec(spec)
+				.header("Authorization", "Bearer " + accessToken)
+				.log().all()
+				.delete(PATH + "/" + id)
+				.then()
+				.spec(ok200or201)
+				.extract()
+				.statusCode();
+	}
+
+	@Step("Send GET /users/{id} request to verify user does not exist")
+	public static int getOneUserWhichIsDeleted(int id) {
+		return given()
+				.spec(spec)
+				.log().all()
+				.get(PATH + "/" + id)
+				.then()
+				.spec(ok404)
 				.log().all()
 				.extract()
-				.as(PostUsersRs.class);
+				.statusCode();
 	}
 }

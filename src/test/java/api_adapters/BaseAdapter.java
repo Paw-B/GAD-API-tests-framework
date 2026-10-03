@@ -26,4 +26,8 @@ public class BaseAdapter {
 	public static ResponseSpecification ok200or201 = new ResponseSpecBuilder()
 			.expectStatusCode(anyOf(is(200), is(201)))
 			.build();
+
+	public static ResponseSpecification ok404 = new ResponseSpecBuilder()
+			.expectStatusCode(404)
+			.build();
 }
