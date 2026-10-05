@@ -63,29 +63,10 @@ public class UsersTest extends BaseTest {
 	public void patchNewlyCreatedUser() {
 		NewUserData requestBodyValues = createNewUserData();
 		PostUsersRs createNewUserRs = postCreateNewUser(requestBodyValues);
-		int idOfCreatedUser = createNewUserRs.id;
-
+		int userId = createNewUserRs.id;
 		NewUserData requestBodyValuesForNewUser = createNewUserData();
-		PostCreateNewUserRq createNewDataForUser = PostCreateNewUserRq
-				.builder()
-				.email(requestBodyValuesForNewUser.getEmail())
-				.firstName(requestBodyValuesForNewUser.getFirstname())
-				.lastName(requestBodyValuesForNewUser.getLastname())
-				.password(requestBodyValuesForNewUser.getPassword())
-				.avatar(requestBodyValuesForNewUser.getAvatar())
-				.build();
-
-		LoginRq loginRq = LoginRq
-				.builder()
-				.email(requestBodyValues.getEmail())
-				.password(requestBodyValues.getPassword())
-				.build();
-
-		String authToken = LoginAdapter.postLogin(loginRq).access_token;
-
-		patchUser(createNewDataForUser, idOfCreatedUser, authToken);
-
-		PostUsersRs getUpdatedUser = getOneUser(idOfCreatedUser);
+		patchNewUser(requestBodyValuesForNewUser, requestBodyValues, userId);
+		PostUsersRs getUpdatedUser = getOneUser(userId);
 
 		assertEquals(getUpdatedUser.firstname, requestBodyValuesForNewUser.getFirstname(),
 				"First name was not patched");
@@ -99,15 +80,7 @@ public class UsersTest extends BaseTest {
 		NewUserData requestBodyValues = createNewUserData();
 		PostUsersRs createNewUserRs = postCreateNewUser(requestBodyValues);
 		int idOfCreatedUser = createNewUserRs.id;
-
-		LoginRq loginRq = LoginRq
-				.builder()
-				.email(requestBodyValues.getEmail())
-				.password(requestBodyValues.getPassword())
-				.build();
-
-		String authToken = LoginAdapter.postLogin(loginRq).access_token;
-
+		String authToken = createAccessToken(requestBodyValues);
 		int statusCode = deleteUser(idOfCreatedUser, authToken);
 
 		assertEquals(statusCode, 200, "Delete user failed");
