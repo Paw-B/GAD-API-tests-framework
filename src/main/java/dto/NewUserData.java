@@ -1,5 +1,6 @@
 package dto;
 
+import com.google.gson.annotations.SerializedName;
 import lombok.*;
 
 @Getter
@@ -8,8 +9,10 @@ import lombok.*;
 public class NewUserData {
 
 	private final String email;
-	private final String firstname;
-	private final String lastname;
+	@SerializedName("firstname")
+	private final String firstName;
+	@SerializedName("lastname")
+	private final String lastName;
 	private final String password;
 	private final String avatar;
 }

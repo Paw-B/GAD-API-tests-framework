@@ -5,12 +5,10 @@ import static dto.NewUserDataFactory.createNewUserData;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static org.testng.Assert.*;
 
-import api_adapters.LoginAdapter;
 import api_adapters.UsersAdapter;
 import dto.NewUserData;
 import io.qameta.allure.*;
 import io.restassured.response.Response;
-import models.login.LoginRq;
 import models.users.*;
 import org.testng.annotations.Test;
 
@@ -21,7 +19,7 @@ public class UsersTest extends BaseTest {
 	@Severity(SeverityLevel.CRITICAL)
 	@Test(testName = "Verify GET /users against schema")
 	public void verifyGetUsersResponseAgainstSchema() {
-		Response getUsersResponse = UsersAdapter.getUsersRequest();
+		Response getUsersResponse = UsersAdapter.getUsers();
 
 		assertTrue(
 				matchesJsonSchemaInClasspath("json_schemas/get_users_schema.json")
@@ -32,58 +30,58 @@ public class UsersTest extends BaseTest {
 	@Feature("Users")
 	@Severity(SeverityLevel.CRITICAL)
 	@Test(testName = "Verify POST /users creates new user", priority = 1)
-	public void createNewUser() {
-		NewUserData requestBodyValues = createNewUserData();
-		PostUsersRs createNewUserRs = postCreateNewUser(requestBodyValues);
+	public void verifyPostUserRequest() {
+		NewUserData requestBody = createNewUserData();
+		PostCreateUserRs createUserRequest = postCreateUser(requestBody);
 
-		assertTrue(createNewUserRs.id > 0, "Id was not assigned.");
-		assertEquals(createNewUserRs.email, requestBodyValues.getEmail(), "Incorrect email returned.");
-		assertEquals(createNewUserRs.firstname, requestBodyValues.getFirstname(), "Incorrect first name returned.");
-		assertEquals(createNewUserRs.lastname, requestBodyValues.getLastname(), "Incorrect last name returned.");
-		assertEquals(createNewUserRs.password, requestBodyValues.getPassword(), "Incorrect password returned.");
-		assertEquals(createNewUserRs.avatar, requestBodyValues.getAvatar(), "Incorrect avatar returned.");
+		assertTrue(createUserRequest.id > 0, "Id was not assigned.");
+		assertEquals(createUserRequest.email, requestBody.getEmail(), "Incorrect email returned.");
+		assertEquals(createUserRequest.firstName, requestBody.getFirstName(), "Incorrect first name returned.");
+		assertEquals(createUserRequest.lastName, requestBody.getLastName(), "Incorrect last name returned.");
+		assertEquals(createUserRequest.password, requestBody.getPassword(), "Incorrect password returned.");
+		assertEquals(createUserRequest.avatar, requestBody.getAvatar(), "Incorrect avatar returned.");
 	}
 
 	@Feature("Users")
 	@Severity(SeverityLevel.NORMAL)
 	@Test(testName = "Verify GET /users/{id} returns user", priority = 2)
-	public void getUser() {
-		NewUserData requestBodyValues = createNewUserData();
-		PostUsersRs createNewUserRs = postCreateNewUser(requestBodyValues);
-		int idOfCreatedUser = createNewUserRs.id;
+	public void verifyGetUserRequest() {
+		NewUserData requestBody = createNewUserData();
+		PostCreateUserRs createUserRequest = postCreateUser(requestBody);
+		int userId = createUserRequest.id;
 
-		PostUsersRs getOneUser = getOneUser(idOfCreatedUser);
-		assertEquals(getOneUser.id, idOfCreatedUser, "Incorrect user id returned.");
-		assertEquals(getOneUser.firstname, requestBodyValues.getFirstname(), "Incorrect first name returned.");
+		PostCreateUserRs getUser = UsersAdapter.getUser(userId);
+		assertEquals(getUser.id, userId, "Incorrect user id returned.");
+		assertEquals(getUser.firstName, requestBody.getFirstName(), "Incorrect first name returned.");
 	}
 
 	@Feature("Users")
 	@Severity(SeverityLevel.CRITICAL)
 	@Test(testName = "Verify PATCH /users/{id} changes user's data", priority = 3)
-	public void patchNewlyCreatedUser() {
-		NewUserData requestBodyValues = createNewUserData();
-		PostUsersRs createNewUserRs = postCreateNewUser(requestBodyValues);
-		int userId = createNewUserRs.id;
+	public void verifyPatchUserRequest() {
+		NewUserData requestBody = createNewUserData();
+		PostCreateUserRs createUserRequest = postCreateUser(requestBody);
+		int userId = createUserRequest.id;
 		NewUserData requestBodyValuesForNewUser = createNewUserData();
-		patchNewUser(requestBodyValuesForNewUser, requestBodyValues, userId);
-		PostUsersRs getUpdatedUser = getOneUser(userId);
+		patchUser(requestBodyValuesForNewUser, requestBody, userId);
+		PostCreateUserRs getUpdatedUserResponse = UsersAdapter.getUser(userId);
 
-		assertEquals(getUpdatedUser.firstname, requestBodyValuesForNewUser.getFirstname(),
+		assertEquals(getUpdatedUserResponse.firstName, requestBodyValuesForNewUser.getFirstName(),
 				"First name was not patched");
-		assertEquals(getUpdatedUser.avatar, requestBodyValuesForNewUser.getAvatar(), "Avatar was not patched");
+		assertEquals(getUpdatedUserResponse.avatar, requestBodyValuesForNewUser.getAvatar(), "Avatar was not patched");
 	}
 
 	@Feature("Users")
 	@Severity(SeverityLevel.CRITICAL)
 	@Test(testName = "Verify DELETE /users/{id} deletes user", priority = 4)
-	public void deleteNewlyCreatedUser() {
-		NewUserData requestBodyValues = createNewUserData();
-		PostUsersRs createNewUserRs = postCreateNewUser(requestBodyValues);
-		int idOfCreatedUser = createNewUserRs.id;
-		String authToken = createAccessToken(requestBodyValues);
-		int statusCode = deleteUser(idOfCreatedUser, authToken);
+	public void verifyDeleteUserRequest() {
+		NewUserData requestBody = createNewUserData();
+		PostCreateUserRs createUserRequest = postCreateUser(requestBody);
+		int userId = createUserRequest.id;
+		String authToken = getAccessToken(requestBody);
+		int deleteUserResponseCode = deleteUser(userId, authToken);
 
-		assertEquals(statusCode, 200, "Delete user failed");
-		assertEquals(getOneUserWhichIsDeleted(idOfCreatedUser), 404, "Delete user failed");
+		assertEquals(deleteUserResponseCode, 200, "Delete user failed");
+		assertEquals(getDeletedUser(userId), 404, "Delete user failed");
 	}
 }

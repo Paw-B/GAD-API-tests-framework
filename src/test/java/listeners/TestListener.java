@@ -1,15 +1,9 @@
 package listeners;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.lang.reflect.*;
+import java.util.*;
 import lombok.extern.log4j.Log4j2;
-import org.testng.IAnnotationTransformer;
-import org.testng.ITestContext;
-import org.testng.ITestListener;
-import org.testng.ITestResult;
+import org.testng.*;
 import org.testng.annotations.ITestAnnotation;
 
 @Log4j2

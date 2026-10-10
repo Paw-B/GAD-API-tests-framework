@@ -5,7 +5,7 @@ import lombok.*;
 
 @Data
 @Builder
-public class PostCreateNewUserRq {
+public class PostCreateUserRq {
 
 	@Expose
 	private String email;
