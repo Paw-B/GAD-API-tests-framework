@@ -1,7 +1,6 @@
 package listeners;
 
-import org.testng.IRetryAnalyzer;
-import org.testng.ITestResult;
+import org.testng.*;
 
 public class RetryAnalyzer implements IRetryAnalyzer {
 

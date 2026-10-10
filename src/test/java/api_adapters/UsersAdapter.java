@@ -3,6 +3,8 @@ package api_adapters;
 import static io.restassured.RestAssured.given;
 
 import io.qameta.allure.Step;
+import io.restassured.mapper.ObjectMapperType;
+import io.restassured.module.jsv.JsonSchemaValidator;
 import io.restassured.response.Response;
 import models.users.*;
 
@@ -11,83 +13,93 @@ public class UsersAdapter extends BaseAdapter {
 	private static final String PATH = "/api/users";
 
 	@Step("Send GET /users request")
-	public static Response getUsersRequest() {
+	public static Response getUsers() {
 		return given()
 				.spec(spec)
 				.log().all()
 				.get(PATH)
 				.then()
-				.spec(ok200or201)
-				.log().all()
+				.spec(ok200)
+				.log().ifValidationFails()
 				.extract()
 				.response();
 	}
 
 	@Step("Send POST /users request")
-	public static PostUsersRs createNewUser(PostCreateNewUserRq rq) {
+	public static PostCreateUserRs createUser(PostCreateUserRq request) {
 		return given()
 				.spec(spec)
 				.log().all()
-				.body(gson.toJson(rq))
+				.body(gson.toJson(request))
 				.log().all()
 				.when()
 				.post(PATH)
 				.then()
-				.spec(ok200or201)
-				.log().all()
+				.spec(ok201)
+				.log().ifValidationFails()
 				.extract()
-				.as(PostUsersRs.class);
+				.as(PostCreateUserRs.class, ObjectMapperType.GSON);
 	}
 
 	@Step("Send GET /users/{id} request")
-	public static PostUsersRs getOneUser(int id) {
+	public static PostCreateUserRs getUser(int userId) {
 		return given()
 				.spec(spec)
 				.log().all()
-				.get(PATH + "/" + id)
+				.get(PATH + "/" + userId)
 				.then()
-				.spec(ok200or201)
-				.log().all()
+				.spec(ok200)
+				.log().ifValidationFails()
+				.assertThat()
+				.body(JsonSchemaValidator.matchesJsonSchemaInClasspath("json_schemas/get_user_schema.json"))
 				.extract()
-				.as(PostUsersRs.class);
+				.as(PostCreateUserRs.class, ObjectMapperType.GSON);
 	}
 
 	@Step("Send PATCH /users/{id} request")
-	public static void patchUser(PostCreateNewUserRq rq, int id, String accessToken) {
+	public static void patchUser(PostCreateUserRq request, int userId, String accessToken) {
 		given()
 				.spec(spec)
 				.header("Authorization", "Bearer " + accessToken)
 				.log().all()
-				.body(gson.toJson(rq))
-				.log().all()
-				.patch(PATH + "/" + id)
+				.body(gson.toJson(request))
+				.log().ifValidationFails()
+				.patch(PATH + "/" + userId)
 				.then()
-				.spec(ok200or201)
-				.log().all();
+				.spec(ok200)
+				.log().ifValidationFails()
+				.assertThat()
+				.header("content-type", "application/json; charset=utf-8")
+				.log().ifValidationFails();
 	}
 
 	@Step("Send DELETE /users/{id} request")
-	public static int deleteUser(int id, String accessToken) {
+	public static int deleteUser(int userId, String accessToken) {
 		return given()
 				.spec(spec)
 				.header("Authorization", "Bearer " + accessToken)
 				.log().all()
-				.delete(PATH + "/" + id)
+				.delete(PATH + "/" + userId)
 				.then()
-				.spec(ok200or201)
+				.spec(ok200)
+				.log().ifValidationFails()
+				.assertThat()
+				.header("content-type", "application/json; charset=utf-8")
 				.extract()
 				.statusCode();
 	}
 
 	@Step("Send GET /users/{id} request to verify user does not exist")
-	public static int getOneUserWhichIsDeleted(int id) {
+	public static int getDeletedUser(int userId) {
 		return given()
 				.spec(spec)
 				.log().all()
-				.get(PATH + "/" + id)
+				.get(PATH + "/" + userId)
 				.then()
 				.spec(ok404)
-				.log().all()
+				.log().ifValidationFails()
+				.assertThat()
+				.header("content-type", "application/json; charset=utf-8")
 				.extract()
 				.statusCode();
 	}

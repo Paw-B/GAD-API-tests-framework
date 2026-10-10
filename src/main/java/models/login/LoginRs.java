@@ -1,9 +1,10 @@
 package models.login;
 
-import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.*;
 
 public class LoginRs {
 
 	@Expose
-	public String access_token;
+	@SerializedName("access_token")
+	public String accessToken;
 }

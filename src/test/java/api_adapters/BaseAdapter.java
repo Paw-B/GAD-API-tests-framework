@@ -1,8 +1,5 @@
 package api_adapters;
 
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
-
 import com.google.gson.*;
 import config.TestConfig;
 import io.restassured.builder.*;
@@ -23,8 +20,12 @@ public class BaseAdapter {
 			.excludeFieldsWithoutExposeAnnotation()
 			.create();
 
-	public static ResponseSpecification ok200or201 = new ResponseSpecBuilder()
-			.expectStatusCode(anyOf(is(200), is(201)))
+	public static ResponseSpecification ok200 = new ResponseSpecBuilder()
+			.expectStatusCode(200)
+			.build();
+
+	public static ResponseSpecification ok201 = new ResponseSpecBuilder()
+			.expectStatusCode(201)
 			.build();
 
 	public static ResponseSpecification ok404 = new ResponseSpecBuilder()

@@ -1,9 +1,6 @@
 package tests;
 
-import static api_adapters.UsersAdapter.patchUser;
-
-import api_adapters.LoginAdapter;
-import api_adapters.UsersAdapter;
+import api_adapters.*;
 import dto.NewUserData;
 import io.qameta.allure.testng.AllureTestNg;
 import listeners.TestListener;
@@ -14,49 +11,49 @@ import org.testng.annotations.Listeners;
 @Listeners({ AllureTestNg.class, TestListener.class })
 public class BaseTest {
 
-	public PostUsersRs postCreateNewUser(NewUserData requestBodyValues) {
+	public PostCreateUserRs postCreateUser(NewUserData requestBody) {
 
-		PostCreateNewUserRq createNewUserRq = PostCreateNewUserRq
+		PostCreateUserRq createNewUserRequest = PostCreateUserRq
 				.builder()
-				.email(requestBodyValues.getEmail())
-				.firstName(requestBodyValues.getFirstname())
-				.lastName(requestBodyValues.getLastname())
-				.password(requestBodyValues.getPassword())
-				.avatar(requestBodyValues.getAvatar())
+				.email(requestBody.getEmail())
+				.firstName(requestBody.getFirstName())
+				.lastName(requestBody.getLastName())
+				.password(requestBody.getPassword())
+				.avatar(requestBody.getAvatar())
 				.build();
 
-		return UsersAdapter.createNewUser(createNewUserRq);
+		return UsersAdapter.createUser(createNewUserRequest);
 	}
 
-	public void patchNewUser(NewUserData requestBodyValuesForNewUser,
-			NewUserData requestBodyValuesForPatchRequestValues, int idOfCreatedUser) {
-		PostCreateNewUserRq createNewDataForUser = PostCreateNewUserRq
+	public void patchUser(NewUserData requestBodyNewUser,
+			NewUserData requestBodyForPatchRequest, int userId) {
+		PostCreateUserRq createNewDataForUser = PostCreateUserRq
 				.builder()
-				.email(requestBodyValuesForNewUser.getEmail())
-				.firstName(requestBodyValuesForNewUser.getFirstname())
-				.lastName(requestBodyValuesForNewUser.getLastname())
-				.password(requestBodyValuesForNewUser.getPassword())
-				.avatar(requestBodyValuesForNewUser.getAvatar())
+				.email(requestBodyNewUser.getEmail())
+				.firstName(requestBodyNewUser.getFirstName())
+				.lastName(requestBodyNewUser.getLastName())
+				.password(requestBodyNewUser.getPassword())
+				.avatar(requestBodyNewUser.getAvatar())
 				.build();
 
-		LoginRq loginRq = LoginRq
+		LoginRq loginRequest = LoginRq
 				.builder()
-				.email(requestBodyValuesForPatchRequestValues.getEmail())
-				.password(requestBodyValuesForPatchRequestValues.getPassword())
+				.email(requestBodyForPatchRequest.getEmail())
+				.password(requestBodyForPatchRequest.getPassword())
 				.build();
 
-		String authToken = LoginAdapter.postLogin(loginRq).access_token;
+		String authToken = LoginAdapter.postLogin(loginRequest).accessToken;
 
-		patchUser(createNewDataForUser, idOfCreatedUser, authToken);
+		UsersAdapter.patchUser(createNewDataForUser, userId, authToken);
 	}
 
-	public String createAccessToken(NewUserData requestBodyValues) {
-		LoginRq loginRq = LoginRq
+	public String getAccessToken(NewUserData requestBody) {
+		LoginRq loginRequest = LoginRq
 				.builder()
-				.email(requestBodyValues.getEmail())
-				.password(requestBodyValues.getPassword())
+				.email(requestBody.getEmail())
+				.password(requestBody.getPassword())
 				.build();
 
-		return LoginAdapter.postLogin(loginRq).access_token;
+		return LoginAdapter.postLogin(loginRequest).accessToken;
 	}
 }
