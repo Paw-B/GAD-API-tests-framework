@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>🦎 GAD | Learning Dashboard Requirements</title>
+    <link rel="icon" href="/data/icons/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/css/fontawesome/css/all.min.css" rel="stylesheet" />
+    <link href="/css/fonts/fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/controls.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="./css/learning.css" />
+    <style>
+        .requirements-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .return-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: var(--primary-color);
+            color: white !important;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+
+        .return-button i {
+            color: white;
+        }
+
+        .return-button:hover {
+            background: var(--secondary-color);
+        }
+
+        .requirement-card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #eee;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .requirement-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .requirement-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .requirement-id {
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+
+        .priority {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: auto;
+        }
+
+        .priority-high {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .priority-medium {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .priority-low {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .requirement-title {
+            font-size: 1.2em;
+            margin: 0;
+            color: #333;
+        }
+
+        .requirement-description {
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .acceptance-criteria {
+            margin-top: 15px;
+            padding-left: 20px;
+        }
+
+        .acceptance-criteria li {
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-color);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .back-to-top:hover {
+            background: var(--secondary-color);
+            transform: translateY(-3px);
+        }
+
+        .back-to-top.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .credentials-table {
+            margin: 15px 0;
+            border-collapse: collapse;
+            width: 300px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .credentials-table th,
+        .credentials-table td {
+            padding: 10px 15px;
+            text-align: left;
+            border: 1px solid #dee2e6;
+        }
+
+        .credentials-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+
+        .credentials-table tr:hover td {
+            background: #fff;
+        }
+
+        .filter-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 12px;
+        }
+
+        .filter-button.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .filter-button:hover:not(.active) {
+            background: #f5f5f5;
+            border-color: #ccc;
+        }
+
+        .filter-button .count {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 10px;
+            margin-left: 6px;
+            font-size: 12px;
+        }
+
+        .filter-button.active .count {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .requirement-card.hidden {
+            display: none;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .tag {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .tag i {
+            margin-right: 4px;
+            font-size: 10px;
+        }
+
+        .tag-filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .clear-filters {
+            background: #ff5252;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: none;
+            font-size: 12px;
+        }
+
+        .clear-filters.visible {
+            display: block;
+        }
+
+        .tag.active {
+            background: #1976d2;
+            color: white;
+            class="credentials-table">
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div style="display: grid; grid-template-columns: 4fr 1fr" class="main-nav-menu">
+            <h1 id="menu-main-gui-learning" class="nav-menu"></h1>
+        </div>
+    </header>
+
+    <br /><br /><br />
+    <div class="requirements-container">
+        <div class="page-header">
+            <h2>Learning Platform Requirements</h2>
+            <a href="welcome.html" class="return-button">
+                <i class="fa-solid fa-arrow-left"></i>
+                Return to Welcome
+            </a><br />&nbsp;<br />
+            <div align="center">
+                These are the business requirements for the Learning Platform.<br />
+                Are they all correct? Well... You can find out by designing proper tests for them😉<br />
+                And for sure there are bugs!🐞
+            </div>
+
+            <table class="credentials-table">
+                <tr>
+                    <th>Username</th>
+                    <th>Password</th>
+                    <th>Role</th>
+                </tr>
+                <tr>
+                    <td>user</td>
+                    <td>demo</td>
+                    <td>student</td>
+                </tr>
+                <tr>
+                    <td>john_doe</td>
+                    <td>demo1</td>
+                    <td>instructor</td>
+                </tr>
+                <tr>
+                    <td>admin</td>
+                    <td>1234</td>
+                    <td>admin</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="filter-controls">
+            <button class="filter-button active" data-priority="all">All Requirements <span class="count">0</span></button>
+            <button class="filter-button" data-priority="high">High Priority <span class="count">0</span></button>
+            <button class="filter-button" data-priority="medium">Medium Priority <span class="count">0</span></button>
+            <button class="filter-button" data-priority="low">Low Priority <span class="count">0</span></button>
+            <button class="clear-filters">Clear Filters</button>
+        </div>
+
+        <div class="tag-filter-controls">
+            <!-- Tags will be populated dynamically -->
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-001</span>
+                <h3 class="requirement-title">User Registration and Authentication</h3>
+                <span class="priority priority-high">High Priority</span>
+            </div>
+            <div class="requirement-description">
+                Users must be able to register, login, and manage their accounts securely.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Security</span>
+                <span class="tag"><i class="fas fa-tag"></i>Authentication</span>
+                <span class="tag"><i class="fas fa-tag"></i>User Management</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Verify email validation during registration</li>
+                <li>Test password strength requirements</li>
+                <li>Validate login with correct and incorrect credentials</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-002</span>
+                <h3 class="requirement-title">Course Enrollment System</h3>
+                <span class="priority priority-high">High Priority</span>
+            </div>
+            <div class="requirement-description">
+                Students should be able to browse, enroll in, and access their courses.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Enrollment</span>
+                <span class="tag"><i class="fas fa-tag"></i>Courses</span>
+                <span class="tag"><i class="fas fa-tag"></i>Access Control</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test course catalog browsing functionality</li>
+                <li>Verify enrollment process and confirmation</li>
+                <li>Validate course access after enrollment</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-003</span>
+                <h3 class="requirement-title">Progress Tracking</h3>
+                <span class="priority priority-medium">Medium Priority</span>
+            </div>
+            <div class="requirement-description">
+                System must track and display student progress through courses.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Learning</span>
+                <span class="tag"><i class="fas fa-tag"></i>Progress</span>
+                <span class="tag"><i class="fas fa-tag"></i>Analytics</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Verify progress percentage calculation</li>
+                <li>Test completion status updates</li>
+                <li>Validate progress persistence across sessions</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-004</span>
+                <h3 class="requirement-title">Course Content Management</h3>
+                <span class="priority priority-high">High Priority</span>
+            </div>
+            <div class="requirement-description">
+                Instructors must be able to create and manage course content.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Content Management</span>
+                <span class="tag"><i class="fas fa-tag"></i>Instructors</span>
+                <span class="tag"><i class="fas fa-tag"></i>Multimedia</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test content creation and editing</li>
+                <li>Verify multimedia content upload</li>
+                <li>Validate content organization features</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-005</span>
+                <h3 class="requirement-title">Assessment System</h3>
+                <span class="priority priority-high">High Priority</span>
+            </div>
+            <div class="requirement-description">
+                Platform must support various types of assessments and quizzes.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Assessment</span>
+                <span class="tag"><i class="fas fa-tag"></i>Grading</span>
+                <span class="tag"><i class="fas fa-tag"></i>Testing</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test multiple question types</li>
+                <li>Verify automated grading</li>
+                <li>Validate assessment feedback system</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-006</span>
+                <h3 class="requirement-title">Certificate Generation</h3>
+                <span class="priority priority-medium">Medium Priority</span>
+            </div>
+            <div class="requirement-description">
+                System should generate and issue certificates upon course completion.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Certificates</span>
+                <span class="tag"><i class="fas fa-tag"></i>Verification</span>
+                <span class="tag"><i class="fas fa-tag"></i>Achievement</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Verify certificate generation triggers</li>
+                <li>Validate public certificate</li>
+                <li>Validate QR code for certificates</li>
+                <li>Validate certificate download functionality</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-007</span>
+                <h3 class="requirement-title">Payment Processing</h3>
+                <span class="priority priority-high">High Priority</span>
+            </div>
+            <div class="requirement-description">
+                Secure payment processing for course purchases and subscription management.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Payments</span>
+                <span class="tag"><i class="fas fa-tag"></i>Security</span>
+                <span class="tag"><i class="fas fa-tag"></i>Transactions</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test payment gateway integration</li>
+                <li>Verify transaction processing</li>
+                <li>Verify transaction history</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-008</span>
+                <h3 class="requirement-title">Analytics Dashboard</h3>
+                <span class="priority priority-low">Low Priority</span>
+            </div>
+            <div class="requirement-description">
+                Instructors should have access to course and student performance analytics.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Analytics</span>
+                <span class="tag"><i class="fas fa-tag"></i>Reporting</span>
+                <span class="tag"><i class="fas fa-tag"></i>Performance</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Verify data visualization accuracy</li>
+                <li>Test report generation</li>
+                <li>Validate data export functionality</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-009</span>
+                <h3 class="requirement-title">Progress Page</h3>
+                <span class="priority priority-medium">Medium Priority</span>
+            </div>
+            <div class="requirement-description">
+                Students should have a progress page to track their courses completion status.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Progress</span>
+                <span class="tag"><i class="fas fa-tag"></i>Tracking</span>
+                <span class="tag"><i class="fas fa-tag"></i>Dashboard</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Verify progress percentage calculation</li>
+                <li>Test course completion status updates</li>
+                <li>Validate progress persistence across sessions</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-010</span>
+                <h3 class="requirement-title">Mobile Responsiveness</h3>
+                <span class="priority priority-medium">Medium Priority</span>
+            </div>
+            <div class="requirement-description">
+                Platform must be fully functional on mobile devices.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Mobile</span>
+                <span class="tag"><i class="fas fa-tag"></i>Responsive</span>
+                <span class="tag"><i class="fas fa-tag"></i>UX</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test responsive design on various devices</li>
+                <li>Verify mobile navigation and usability</li>
+                <li>Validate video playback on mobile</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-011</span>
+                <h3 class="requirement-title">User Profile Management</h3>
+                <span class="priority priority-high">High Priority</span>
+            </div>
+            <div class="requirement-description">
+                Users should be able to manage their profile information and account settings.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Profile</span>
+                <span class="tag"><i class="fas fa-tag"></i>Account</span>
+                <span class="tag"><i class="fas fa-tag"></i>Settings</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test profile information update functionality</li>
+                <li>Verify password change process</li>
+                <li>Validate account deactivation flow</li>
+                <li>Test funds management and transaction history</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-012</span>
+                <h3 class="requirement-title">Course Content Navigation</h3>
+                <span class="priority priority-high">High Priority</span>
+            </div>
+            <div class="requirement-description">
+                Students must be able to navigate through course content efficiently.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Navigation</span>
+                <span class="tag"><i class="fas fa-tag"></i>Content</span>
+                <span class="tag"><i class="fas fa-tag"></i>Learning</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test lesson navigation and progression</li>
+                <li>Verify video player functionality</li>
+                <li>Validate course materials accessibility</li>
+                <li>Test progress saving between sessions</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-013</span>
+                <h3 class="requirement-title">Instructor Dashboard</h3>
+                <span class="priority priority-medium">Medium Priority</span>
+            </div>
+            <div class="requirement-description">
+                Instructors need comprehensive tools to manage courses and monitor student progress.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Dashboard</span>
+                <span class="tag"><i class="fas fa-tag"></i>Management</span>
+                <span class="tag"><i class="fas fa-tag"></i>Analytics</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test course creation and editing features</li>
+                <li>Verify student progress tracking</li>
+                <li>Validate course analytics dashboard</li>
+                <li>Validate download and export features</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-014</span>
+                <h3 class="requirement-title">Search and Filtering</h3>
+                <span class="priority priority-medium">Medium Priority</span>
+            </div>
+            <div class="requirement-description">
+                Users should be able to easily find courses and content through search and filters.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Search</span>
+                <span class="tag"><i class="fas fa-tag"></i>Filtering</span>
+                <span class="tag"><i class="fas fa-tag"></i>Organization</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test course search functionality</li>
+                <li>Verify filter options work correctly</li>
+                <li>Verify filter by tags</li>
+                <li>Verify sorting options</li>
+                <li>Validate search result relevance</li>
+                <li>Test search performance with large datasets</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-015</span>
+                <h3 class="requirement-title">Rating and Feedback System</h3>
+                <span class="priority priority-medium">Medium Priority</span>
+            </div>
+            <div class="requirement-description">
+                Users should be able to rate courses and provide feedback to instructors.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Feedback</span>
+                <span class="tag"><i class="fas fa-tag"></i>Rating</span>
+                <span class="tag"><i class="fas fa-tag"></i>Reviews</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test rating system functionality</li>
+                <li>Verify feedback submission process</li>
+                <li>Validate feedback visibility to instructors</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-016</span>
+                <h3 class="requirement-title">Accessibility Features</h3>
+                <span class="priority priority-low">Low Priority</span>
+            </div>
+            <div class="requirement-description">
+                Enhanced accessibility features for users with disabilities.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Accessibility</span>
+                <span class="tag"><i class="fas fa-tag"></i>Inclusivity</span>
+                <span class="tag"><i class="fas fa-tag"></i>Standards</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test screen reader compatibility</li>
+                <li>Verify keyboard navigation</li>
+                <li>Validate ARIA attributes implementation</li>
+                <li>Test color contrast requirements</li>
+                <li>Verify closed captions for video content</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-017</span>
+                <h3 class="requirement-title">Free Demo Preview</h3>
+                <span class="priority priority-medium">Medium Priority</span>
+            </div>
+            <div class="requirement-description">
+                Users should be able to preview a free demo of the course content.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Preview</span>
+                <span class="tag"><i class="fas fa-tag"></i>Demo</span>
+                <span class="tag"><i class="fas fa-tag"></i>Marketing</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Verify demo access without registration</li>
+                <li>Test demo content availability</li>
+                <li>Validate demo duration and restrictions</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-018</span>
+                <h3 class="requirement-title">Free Course Access</h3>
+                <span class="priority priority-medium">Medium Priority</span>
+            </div>
+            <div class="requirement-description">
+                Users should be able to enroll in free courses without payment.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Access</span>
+                <span class="tag"><i class="fas fa-tag"></i>Free Content</span>
+                <span class="tag"><i class="fas fa-tag"></i>Learning</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Verify free course enrollment process</li>
+                <li>Test course access without payment</li>
+                <li>Validate free course completion and certificate</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-019</span>
+                <h3 class="requirement-title">Public User Profile</h3>
+                <span class="priority priority-medium">Medium Priority</span>
+            </div>
+            <div class="requirement-description">
+                Users can have a public profile page to showcase their learning achievements.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Profile</span>
+                <span class="tag"><i class="fas fa-tag"></i>Public Access</span>
+                <span class="tag"><i class="fas fa-tag"></i>Achievements</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Verify public profile visibility settings</li>
+                <li>Test profile information update</li>
+                <li>Validate public access from course comments and reviews</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-020</span>
+                <h3 class="requirement-title">Content Download Features</h3>
+                <span class="priority priority-low">Low Priority</span>
+            </div>
+            <div class="requirement-description">
+                Users should be able to download course content in multiple formats for offline access.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Downloads</span>
+                <span class="tag"><i class="fas fa-tag"></i>Offline Access</span>
+                <span class="tag"><i class="fas fa-tag"></i>Content</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test lesson content download in TXT format</li>
+                <li>Verify transcript download in Markdown format</li>
+                <li>Validate resource list export in CSV format</li>
+                <li>Test downloaded content integrity</li>
+            </ul>
+        </div>
+
+        <div class="requirement-card">
+            <div class="requirement-header">
+                <span class="requirement-id">REQ-021</span>
+                <h3 class="requirement-title">Course Tags System</h3>
+                <span class="priority priority-low">Low Priority</span>
+            </div>
+            <div class="requirement-description">
+                Enhanced course tagging and categorization system for better content organization.
+            </div>
+            <div class="tags">
+                <span class="tag"><i class="fas fa-tag"></i>Tags</span>
+                <span class="tag"><i class="fas fa-tag"></i>Organization</span>
+                <span class="tag"><i class="fas fa-tag"></i>Categories</span>
+            </div>
+            <ul class="acceptance-criteria">
+                <li>Test tag-based course filtering</li>
+                <li>Verify tag sorting functionality</li>
+                <li>Validate tag count display</li>
+                <li>Test tag visibility controls</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <button class="mobile-menu-button" aria-label="Open menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    <div class="sidebar-overlay"></div>
+
+    <a href="#" class="back-to-top" id="backToTop" title="Back to Top">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+
+    <script type="text/javascript" src="/js/common.js"></script>
+    <script type="text/javascript" src="/js/header.js"></script>
+    <script type="text/javascript" src="/version.js"></script>
+
+    <script>
+        const backToTopButton = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.add('visible');
+            } else {
+                backToTopButton.classList.remove('visible');
+            }
+        });
+
+        backToTopButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const filterButtons = document.querySelectorAll('.filter-button');
+            const clearFiltersButton = document.querySelector('.clear-filters');
+            const requirements = document.querySelectorAll('.requirement-card');
+
+            let activePriority = 'all';
+            let activeTags = new Set();
+
+            const importantTags = new Set([
+                'Security',
+                'Authentication',
+                'Content',
+                'Analytics',
+                'Learning',
+                'Progress',
+                'Management',
+                'Assessment',
+                'Mobile',
+                'Accessibility'
+            ]);
+
+            function updateVisibility() {
+                requirements.forEach(req => {
+                    const reqPriority = req.querySelector('.priority').textContent
+                        .toLowerCase().replace(' priority', '');
+                    const reqTags = Array.from(req.querySelectorAll('.tags .tag'))
+                        .map(tag => tag.textContent.trim());
+
+                    const matchesPriority = activePriority === 'all' || reqPriority === activePriority;
+                    const matchesTags = activeTags.size === 0 ||
+                        Array.from(activeTags).every(tag => reqTags.includes(tag));
+
+                    req.classList.toggle('hidden', !matchesPriority || !matchesTags);
+                });
+
+                clearFiltersButton.classList.toggle('visible',
+                    activePriority !== 'all' || activeTags.size > 0);
+            }
+
+            filterButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    activePriority = button.dataset.priority;
+                    updateVisibility();
+                });
+            });
+
+            function populateTagFilters() {
+                const tagFilterContainer = document.querySelector('.tag-filter-controls');
+                const allTags = new Set();
+
+                requirements.forEach(req => {
+                    const reqTags = Array.from(req.querySelectorAll('.tags .tag'))
+                        .map(tag => tag.textContent.trim())
+                        .filter(tag => importantTags.has(tag));
+                    reqTags.forEach(tag => allTags.add(tag));
+                });
+
+                const sortedTags = Array.from(allTags).sort();
+
+                tagFilterContainer.innerHTML = '';
+
+                sortedTags.forEach(tag => {
+                    const tagElement = document.createElement('span');
+                    tagElement.className = 'tag';
+                    tagElement.dataset.tag = tag;
+                    tagElement.innerHTML = `<i class="fas fa-tag"></i>${tag}`;
+                    tagFilterContainer.appendChild(tagElement);
+                });
+
+                const tagButtons = document.querySelectorAll('.tag-filter-controls .tag');
+                tagButtons.forEach(tag => {
+                    tag.addEventListener('click', () => {
+                        const tagName = tag.dataset.tag;
+                        tag.classList.toggle('active');
+
+                        if (tag.classList.contains('active')) {
+                            activeTags.add(tagName);
+                        } else {
+                            activeTags.delete(tagName);
+                        }
+
+                        updateVisibility();
+                    });
+                });
+            }
+
+            populateTagFilters();
+
+            clearFiltersButton.addEventListener('click', () => {
+                activePriority = 'all';
+                activeTags.clear();
+                filterButtons.forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.priority === 'all');
+                });
+                const tagButtons = document.querySelectorAll('.tag-filter-controls .tag');
+                tagButtons.forEach(tag => tag.classList.remove('active'));
+                updateVisibility();
+            });
+
+            const counts = {
+                all: requirements.length,
+                high: 0,
+                medium: 0,
+                low: 0
+            };
+
+            requirements.forEach(req => {
+                const priority = req.querySelector('.priority').textContent
+                    .toLowerCase().replace(' priority', '');
+                counts[priority]++;
+            });
+
+            filterButtons.forEach(button => {
+                const priority = button.dataset.priority;
+                button.querySelector('.count').textContent = counts[priority];
+            });
+        });
+    </script>
+    <script src="./js/hamburger-menu.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,1072 @@
+/**
+ * GadTalk Profile Page
+ * Handles profile display and editing
+ */
+
+const gadTalkProfile = (function () {
+  let currentUser = null;
+  let profileUser = null;
+  // eslint-disable-next-line no-unused-vars
+  let currentTab = "gads"; // Used for tab state tracking
+  let currentPage = 1;
+  let isLoading = false;
+  let hasMore = true;
+  let featureFlags = {};
+
+  function showFollowMessage(container, message) {
+    if (!container) return;
+    let msgEl = container.querySelector(".gt-follow-message");
+    if (!msgEl) {
+      msgEl = document.createElement("span");
+      msgEl.className = "gt-text-secondary gt-text-sm gt-follow-message";
+      msgEl.setAttribute("role", "status");
+      container.appendChild(msgEl);
+    }
+    msgEl.textContent = message;
+
+    clearTimeout(msgEl._gtHideTimer);
+    msgEl._gtHideTimer = setTimeout(() => {
+      if (msgEl && msgEl.parentElement) {
+        msgEl.parentElement.removeChild(msgEl);
+      }
+    }, 3000);
+  }
+
+  async function getFollowingIds() {
+    const followingIds = new Set();
+    if (!currentUser || !window.GadTalkAPI?.users?.getFollowing) return followingIds;
+
+    try {
+      const followingResponse = await window.GadTalkAPI.users.getFollowing(currentUser.id, 1, 200);
+      const followingUsers = followingResponse?.users || followingResponse?.following || followingResponse?.data || [];
+      followingUsers.forEach((user) => {
+        if (user && user.id) {
+          followingIds.add(user.id);
+        }
+      });
+    } catch (error) {
+      // Silently ignore follow list fetch errors to avoid console noise
+    }
+
+    return followingIds;
+  }
+
+  function scoreSuggestedUser(user) {
+    if (!user) return -Infinity;
+    let score = 0;
+
+    score += (user.followersCount || 0) * 2;
+    score += user.gadsCount || 0;
+    if (user.role === "admin") score += 25;
+
+    if (user.lastLoginAt) {
+      const lastLogin = Date.parse(user.lastLoginAt);
+      if (!Number.isNaN(lastLogin)) {
+        const daysAgo = (Date.now() - lastLogin) / (1000 * 60 * 60 * 24);
+        if (daysAgo <= 1) score += 15;
+        else if (daysAgo <= 7) score += 8;
+      }
+    }
+
+    return score + Math.random();
+  }
+
+  function mergeUniqueUsers(existing, incoming) {
+    const byId = new Map(existing.map((user) => [user.id, user]));
+    incoming.forEach((user) => {
+      if (user && user.id && !byId.has(user.id)) {
+        byId.set(user.id, user);
+      }
+    });
+    return Array.from(byId.values());
+  }
+
+  async function getSuggestedUsers(limit = 3) {
+    let candidates = [];
+
+    try {
+      const response = await window.GadTalkAPI.users.getSuggestions(limit * 2);
+      candidates = mergeUniqueUsers(candidates, response?.users || []);
+    } catch (error) {
+      // Ignore to allow other sources
+    }
+
+    try {
+      if (window.GadTalkAPI?.explore?.getData) {
+        const explore = await window.GadTalkAPI.explore.getData();
+        candidates = mergeUniqueUsers(candidates, explore?.suggestedUsers || []);
+      }
+    } catch (error) {
+      // Ignore to allow other sources
+    }
+
+    const searchQueries = ["a", "e", "i", "o", "u", "test", "qa", "dev", "auto"];
+    for (const query of searchQueries) {
+      if (candidates.length >= limit * 3) break;
+      try {
+        const response = await window.GadTalkAPI.users.search(query, 1, 10);
+        candidates = mergeUniqueUsers(candidates, response?.users || []);
+      } catch (error) {
+        // Ignore and continue
+      }
+    }
+
+    const followingIds = await getFollowingIds();
+    const filtered = candidates.filter(
+      (user) => user && user.id && !followingIds.has(user.id) && (!currentUser || user.id !== currentUser.id)
+    );
+
+    return filtered.sort((a, b) => scoreSuggestedUser(b) - scoreSuggestedUser(a)).slice(0, limit);
+  }
+
+  /**
+   * Initialize the profile page
+   */
+  async function init() {
+    // Require authentication
+    currentUser = await window.gadTalkAuth.requireAuth();
+    if (!currentUser) return;
+
+    // Update nav user section
+    updateNavUser();
+    // Load sidebar suggestions
+    loadSidebarSuggestions();
+
+    // Get username from URL or pathname (/gad-talk/@username)
+    const params = new URLSearchParams(window.location.search);
+    let username = params.get("user");
+    if (!username) {
+      const m = window.location.pathname.match(/@([^/]+)/);
+      if (m) username = decodeURIComponent(m[1]);
+    }
+    username = username || currentUser.username;
+
+    // Load profile
+    await loadProfile(username);
+
+    // Load feature flags
+    await loadFeatureFlags();
+
+    // Setup tabs
+    setupTabs();
+
+    // Setup compose modal
+    setupComposeModal();
+
+    // Setup edit profile modal (if own profile)
+    setupEditProfileModal();
+
+    // Setup nav profile link
+    const navProfile = document.getElementById("nav-profile");
+    if (navProfile) {
+      navProfile.href = `/gad-talk/@${encodeURIComponent(currentUser.username)}`;
+    }
+  }
+
+  async function loadFeatureFlags() {
+    if (!window.GadTalkAPI || !window.GadTalkAPI.featureFlags) return;
+    try {
+      const response = await window.GadTalkAPI.featureFlags.getAll();
+      const flags = response?.data || response?.flags || response || [];
+      featureFlags = flags.reduce((acc, flag) => {
+        acc[String(flag.key || "").toLowerCase()] = !!flag.enabled;
+        return acc;
+      }, {});
+
+      applyFeatureFlags();
+    } catch (error) {
+      featureFlags = {};
+      applyFeatureFlags();
+    }
+  }
+
+  function applyFeatureFlags() {
+    const analyticsTab = document.querySelector('.gt-tab[data-tab="analytics"]');
+    const chartsSection = document.getElementById("profile-charts");
+    const chartsEnabled = featureFlags.charts !== false;
+
+    if (analyticsTab) {
+      analyticsTab.classList.toggle("gt-hidden", !chartsEnabled);
+    }
+    if (chartsSection) {
+      chartsSection.classList.toggle("gt-hidden", !chartsEnabled || currentTab !== "analytics");
+    }
+
+    if (!chartsEnabled && currentTab === "analytics") {
+      setActiveTab("gads");
+    }
+  }
+
+  /**
+   * Update navigation user section
+   */
+  function updateNavUser() {
+    const navUserSection = document.getElementById("nav-user-section");
+    if (!navUserSection || !currentUser) return;
+
+    // Render a modern dropdown button for the nav user area
+    navUserSection.innerHTML = `
+      <div class="gt-nav-user">
+        <button class="gt-nav-user-btn" id="nav-user-dropdown-btn" aria-haspopup="true" aria-expanded="false">
+          ${window.gadTalkGads.getAvatarHtml(currentUser, "sm")}
+          <span class="gt-nav-user-name">${currentUser.displayName || currentUser.username}</span>
+          <span class="gt-nav-user-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+        </button>
+      </div>
+    `;
+
+    const dropdownBtn = navUserSection.querySelector("#nav-user-dropdown-btn");
+    if (dropdownBtn && window.GadTalkUI) {
+      dropdownBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        dropdownBtn.setAttribute("aria-expanded", "true");
+        window.GadTalkUI.showDropdown(
+          dropdownBtn,
+          [
+            {
+              text: "Profile",
+              icon: '<i class="fa-solid fa-user"></i>',
+              onClick: () => {
+                window.location.href = `/gad-talk/@${encodeURIComponent(currentUser.username)}`;
+              },
+            },
+            {
+              text: "Bookmarks",
+              icon: '<i class="fa-solid fa-bookmark"></i>',
+              onClick: () => {
+                window.location.href = "/gad-talk/bookmarks.html";
+              },
+            },
+            { divider: true },
+            {
+              text: "Logout",
+              icon: '<i class="fa-solid fa-right-from-bracket"></i>',
+              danger: true,
+              onClick: () => window.gadTalkAuth.handleLogout(),
+            },
+          ],
+          { align: "right" }
+        );
+        setTimeout(() => {
+          const onDocClick = () => {
+            dropdownBtn.setAttribute("aria-expanded", "false");
+            document.removeEventListener("click", onDocClick);
+          };
+          document.addEventListener("click", onDocClick);
+        }, 0);
+      });
+    } else if (dropdownBtn) {
+      dropdownBtn.addEventListener("click", () => {
+        window.location.href = `/gad-talk/@${encodeURIComponent(currentUser.username)}`;
+      });
+    }
+  }
+
+  async function loadSidebarSuggestions() {
+    const suggestionsList = document.getElementById("suggestions-list");
+    if (!suggestionsList) return;
+
+    try {
+      const users = await getSuggestedUsers(3);
+
+      if (users.length === 0) {
+        suggestionsList.innerHTML = '<p class="gt-text-secondary gt-text-sm">No suggestions right now</p>';
+        return;
+      }
+
+      suggestionsList.innerHTML = users
+        .map(
+          (user) => `
+        <div class="gt-suggestion-item">
+          <a href="/gad-talk/@${encodeURIComponent(user.username)}" class="gt-suggestion-user">
+            ${window.gadTalkGads.getAvatarHtml(user, "sm")}
+            <div class="gt-suggestion-info">
+              <span class="gt-suggestion-name">${user.displayName || user.username}</span>
+              <span class="gt-suggestion-username">@${user.username}</span>
+            </div>
+          </a>
+          <button class="gt-btn ${
+            user.isFollowing ? "gt-btn-secondary gt-following" : "gt-btn-primary"
+          } gt-btn-sm" data-follow="${user.id}" data-following="${user.isFollowing}" data-testid="follow-${
+            user.username
+          }">
+            ${user.isFollowing ? "Following" : "Follow"}
+          </button>
+        </div>
+      `
+        )
+        .join("");
+
+      // Attach follow handlers
+      suggestionsList.querySelectorAll("[data-follow]").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const userId = btn.dataset.follow;
+          const isFollowing = btn.dataset.following === "true";
+          if (btn.dataset.loading === "true") return;
+          if (isFollowing) {
+            showFollowMessage(btn.parentElement, "Already following");
+            return;
+          }
+
+          btn.dataset.loading = "true";
+          btn.disabled = true;
+
+          try {
+            await window.GadTalkAPI.users.follow(userId);
+            btn.textContent = "Following";
+            btn.classList.remove("gt-btn-primary");
+            btn.classList.add("gt-btn-secondary", "gt-following");
+            btn.dataset.following = "true";
+            showFollowMessage(btn.parentElement, "Now following");
+          } catch (error) {
+            if (error && error.message && /already following/i.test(error.message)) {
+              btn.textContent = "Following";
+              btn.classList.remove("gt-btn-primary");
+              btn.classList.add("gt-btn-secondary", "gt-following");
+              btn.dataset.following = "true";
+              showFollowMessage(btn.parentElement, "Already following");
+            } else {
+              showFollowMessage(btn.parentElement, "Could not follow user");
+            }
+          } finally {
+            btn.dataset.loading = "false";
+            btn.disabled = false;
+          }
+        });
+      });
+    } catch (error) {
+      suggestionsList.innerHTML = '<p class="gt-text-secondary gt-text-sm">Failed to load suggestions</p>';
+    }
+  }
+
+  /**
+   * Load user profile
+   */
+  async function loadProfile(username) {
+    try {
+      const response = await window.GadTalkAPI.users.getByUsername(username);
+      profileUser = response.data;
+
+      updateProfileUI();
+      await loadProfileGads();
+    } catch (error) {
+      window.gadTalkGads.showToast("Failed to load profile", "error");
+    }
+  }
+
+  /**
+   * Render profile badges
+   */
+  function renderProfileBadges(badges) {
+    const container = document.getElementById("profile-badges");
+    if (!container) return;
+
+    if (!badges || badges.length === 0) {
+      container.classList.add("gt-hidden");
+      return;
+    }
+
+    const badgesHtml = badges
+      .map(
+        (badge) => `
+        <span class="gt-badge-item gt-badge-${badge.id}" title="${badge.description || badge.name}">
+          <span class="gt-badge-item-icon"><i class="${badge.icon}"></i></span>
+          <span>${badge.name}</span>
+        </span>
+      `
+      )
+      .join("");
+
+    container.innerHTML = badgesHtml;
+    container.classList.remove("gt-hidden");
+  }
+
+  /**
+   * Update profile UI
+   */
+  function updateProfileUI() {
+    if (!profileUser) return;
+
+    const isOwnProfile = currentUser && currentUser.id === profileUser.id;
+
+    // Update page title
+    document.title = `${profileUser.displayName || profileUser.username} (@${profileUser.username}) - GadTalk`;
+
+    // Update header
+    const profileName = document.getElementById("profile-name");
+    const gadsCount = document.getElementById("gads-count");
+    if (profileName) profileName.textContent = profileUser.displayName || profileUser.username;
+    if (gadsCount) gadsCount.textContent = `${profileUser.gadsCount || 0} Gads`;
+
+    // Update banner (stored as header in backend)
+    const profileBanner = document.getElementById("profile-banner");
+    const profileHeaderEl = document.getElementById("profile-header");
+    if (profileBanner && profileHeaderEl) {
+      if (profileUser.header) {
+        profileHeaderEl.classList.remove("gt-profile-header--no-banner");
+        profileBanner.style.backgroundImage = `url(${profileUser.header})`;
+        profileBanner.style.background = "";
+      } else {
+        // No banner: hide the banner element and collapse header spacing
+        profileHeaderEl.classList.add("gt-profile-header--no-banner");
+        profileBanner.style.backgroundImage = "";
+        profileBanner.style.background = "none";
+      }
+    }
+
+    // Update actions
+    const profileActions = document.getElementById("profile-actions");
+    if (profileActions) {
+      if (isOwnProfile) {
+        profileActions.innerHTML = `
+          <button class="gt-btn gt-btn-secondary" id="edit-profile-btn" data-testid="edit-profile-button">
+            Edit Profile
+          </button>
+        `;
+        document.getElementById("edit-profile-btn").addEventListener("click", openEditModal);
+      } else {
+        const isFollowing = profileUser.isFollowing || false;
+        const isBlocked = profileUser.isBlocked || false;
+        const isMuted = profileUser.isMuted || false;
+        profileActions.innerHTML = `
+          <div class="gt-profile-more-container">
+            <button class="gt-btn gt-btn-icon" id="more-options-btn" title="More options" data-testid="more-options-button">
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+            <div class="gt-dropdown gt-hidden" id="more-options-menu">
+              <button class="gt-dropdown-item" id="mute-btn" data-testid="mute-button">
+                <span class="gt-dropdown-icon"><i class="fa-solid ${
+                  isMuted ? "fa-volume-high" : "fa-volume-xmark"
+                }"></i></span>
+                ${isMuted ? "Unmute" : "Mute"} @${profileUser.username}
+              </button>
+              <button class="gt-dropdown-item gt-dropdown-item-danger" id="block-btn" data-testid="block-button">
+                <span class="gt-dropdown-icon"><i class="fa-solid ${isBlocked ? "fa-user-check" : "fa-ban"}"></i></span>
+                ${isBlocked ? "Unblock" : "Block"} @${profileUser.username}
+              </button>
+            </div>
+          </div>
+          <button class="gt-btn ${isFollowing ? "gt-btn-secondary" : "gt-btn-primary"}" 
+                  id="follow-btn" 
+                  data-testid="follow-button"
+                  data-user-id="${profileUser.id}">
+            ${isFollowing ? "Following" : "Follow"}
+          </button>
+        `;
+        document.getElementById("follow-btn").addEventListener("click", handleFollowToggle);
+        setupMoreOptionsMenu();
+      }
+    }
+
+    // Update profile info
+    const displayName = document.getElementById("display-name");
+    const usernameEl = document.getElementById("username");
+    const bio = document.getElementById("profile-bio");
+    const location = document.getElementById("profile-location");
+    const website = document.getElementById("profile-website");
+    const joined = document.getElementById("profile-joined");
+
+    if (displayName) displayName.textContent = profileUser.displayName || profileUser.username;
+    if (usernameEl) usernameEl.textContent = `@${profileUser.username}`;
+    if (bio) bio.textContent = profileUser.bio || "";
+
+    if (location) {
+      if (profileUser.location) {
+        location.classList.remove("gt-hidden");
+        location.querySelector("span:last-child").textContent = profileUser.location;
+      } else {
+        location.classList.add("gt-hidden");
+      }
+    }
+
+    if (website) {
+      if (profileUser.website) {
+        website.classList.remove("gt-hidden");
+        const link = website.querySelector("a");
+        link.href = profileUser.website;
+        link.textContent = profileUser.website.replace(/^https?:\/\//, "");
+      } else {
+        website.classList.add("gt-hidden");
+      }
+    }
+
+    if (joined) {
+      const joinedDate = new Date(profileUser.createdAt);
+      joined.querySelector("span:last-child").textContent =
+        "Joined " + joinedDate.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+    }
+
+    // Render profile badges
+    renderProfileBadges(profileUser.badges);
+
+    // Update stats
+    const followingCount = document.getElementById("following-count");
+    const followersCount = document.getElementById("followers-count");
+    const followingLink = document.getElementById("following-link");
+    const followersLink = document.getElementById("followers-link");
+
+    if (followingCount) followingCount.textContent = profileUser.followingCount || 0;
+    if (followersCount) followersCount.textContent = profileUser.followersCount || 0;
+    if (followingLink) followingLink.href = `/gad-talk/following.html?user=${profileUser.username}`;
+    if (followersLink) followersLink.href = `/gad-talk/followers.html?user=${profileUser.username}`;
+  }
+
+  /**
+   * Handle follow/unfollow toggle
+   */
+  async function handleFollowToggle(event) {
+    const btn = event.currentTarget;
+    const userId = btn.dataset.userId;
+    const isFollowing = btn.textContent.trim() === "Following";
+
+    try {
+      if (isFollowing) {
+        await window.GadTalkAPI.users.unfollow(userId);
+        btn.textContent = "Follow";
+        btn.classList.remove("gt-btn-secondary");
+        btn.classList.add("gt-btn-primary");
+        profileUser.isFollowing = false;
+        profileUser.followersCount = (profileUser.followersCount || 1) - 1;
+      } else {
+        await window.GadTalkAPI.users.follow(userId);
+        btn.textContent = "Following";
+        btn.classList.remove("gt-btn-primary");
+        btn.classList.add("gt-btn-secondary");
+        profileUser.isFollowing = true;
+        profileUser.followersCount = (profileUser.followersCount || 0) + 1;
+      }
+
+      // Update followers count
+      const followersCount = document.getElementById("followers-count");
+      if (followersCount) followersCount.textContent = profileUser.followersCount;
+    } catch (error) {
+      if (error && error.message && /already following/i.test(error.message)) {
+        btn.textContent = "Following";
+        btn.classList.remove("gt-btn-primary");
+        btn.classList.add("gt-btn-secondary");
+        profileUser.isFollowing = true;
+        showFollowMessage(btn.parentElement, "Already following");
+      } else {
+        showFollowMessage(btn.parentElement, "Could not update follow status");
+      }
+    }
+  }
+
+  /**
+   * Setup more options dropdown menu
+   */
+  function setupMoreOptionsMenu() {
+    const moreBtn = document.getElementById("more-options-btn");
+    const moreMenu = document.getElementById("more-options-menu");
+    const muteBtn = document.getElementById("mute-btn");
+    const blockBtn = document.getElementById("block-btn");
+
+    if (!moreBtn || !moreMenu) return;
+
+    // Toggle dropdown on button click
+    moreBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      moreMenu.classList.toggle("gt-hidden");
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener("click", () => {
+      moreMenu.classList.add("gt-hidden");
+    });
+
+    // Prevent closing when clicking inside menu
+    moreMenu.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+
+    // Mute/Unmute handler
+    if (muteBtn) {
+      muteBtn.addEventListener("click", async () => {
+        try {
+          const isMuted = profileUser.isMuted || false;
+          if (isMuted) {
+            await window.GadTalkAPI.users.unmute(profileUser.id);
+            profileUser.isMuted = false;
+            muteBtn.innerHTML = `
+              <span class="gt-dropdown-icon"><i class="fa-solid fa-volume-xmark"></i></span>
+              Mute @${profileUser.username}
+            `;
+            window.gadTalkGads.showToast(`Unmuted @${profileUser.username}`, "success");
+          } else {
+            await window.GadTalkAPI.users.mute(profileUser.id);
+            profileUser.isMuted = true;
+            muteBtn.innerHTML = `
+              <span class="gt-dropdown-icon"><i class="fa-solid fa-volume-high"></i></span>
+              Unmute @${profileUser.username}
+            `;
+            window.gadTalkGads.showToast(`Muted @${profileUser.username}`, "success");
+          }
+          moreMenu.classList.add("gt-hidden");
+        } catch (error) {
+          window.gadTalkGads.showToast("Failed to update mute status", "error");
+        }
+      });
+    }
+
+    // Block/Unblock handler
+    if (blockBtn) {
+      blockBtn.addEventListener("click", async () => {
+        try {
+          const isBlocked = profileUser.isBlocked || false;
+          if (isBlocked) {
+            await window.GadTalkAPI.users.unblock(profileUser.id);
+            profileUser.isBlocked = false;
+            blockBtn.innerHTML = `
+              <span class="gt-dropdown-icon"><i class="fa-solid fa-ban"></i></span>
+              Block @${profileUser.username}
+            `;
+            window.gadTalkGads.showToast(`Unblocked @${profileUser.username}`, "success");
+          } else {
+            await window.GadTalkAPI.users.block(profileUser.id);
+            profileUser.isBlocked = true;
+            blockBtn.innerHTML = `
+              <span class="gt-dropdown-icon"><i class="fa-solid fa-user-check"></i></span>
+              Unblock @${profileUser.username}
+            `;
+            window.gadTalkGads.showToast(`Blocked @${profileUser.username}`, "success");
+          }
+          moreMenu.classList.add("gt-hidden");
+        } catch (error) {
+          window.gadTalkGads.showToast("Failed to update block status", "error");
+        }
+      });
+    }
+  }
+
+  /**
+   * Setup tabs
+   */
+  function setupTabs() {
+    const tabs = document.querySelectorAll(".gt-tab[data-tab]");
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", async () => {
+        tabs.forEach((t) => t.classList.remove("gt-tab-active"));
+        tab.classList.add("gt-tab-active");
+
+        await setActiveTab(tab.dataset.tab);
+      });
+    });
+  }
+
+  async function setActiveTab(tabName) {
+    currentTab = tabName;
+
+    if (currentTab === "analytics" && featureFlags.charts === false) {
+      currentTab = "gads";
+    }
+
+    const chartsSection = document.getElementById("profile-charts");
+    const networkSection = document.getElementById("profile-network");
+    const profileFeed = document.getElementById("profile-feed");
+
+    if (currentTab === "analytics") {
+      if (profileFeed) profileFeed.classList.add("gt-hidden");
+      if (networkSection) networkSection.classList.add("gt-hidden");
+      if (chartsSection) chartsSection.classList.remove("gt-hidden");
+      await loadProfileCharts();
+      return;
+    }
+
+    if (currentTab === "network") {
+      if (profileFeed) profileFeed.classList.add("gt-hidden");
+      if (chartsSection) chartsSection.classList.add("gt-hidden");
+      if (networkSection) networkSection.classList.remove("gt-hidden");
+      if (window.gadTalkNetworkGraph) {
+        window.gadTalkNetworkGraph.loadNetworkData(profileUser.id, profileUser.displayName || profileUser.username);
+      }
+      return;
+    }
+
+    if (chartsSection) chartsSection.classList.add("gt-hidden");
+    if (networkSection) networkSection.classList.add("gt-hidden");
+    if (profileFeed) profileFeed.classList.remove("gt-hidden");
+
+    currentPage = 1;
+    hasMore = true;
+    await loadProfileGads();
+  }
+
+  /**
+   * Load profile gads
+   */
+  async function loadProfileGads() {
+    if (currentTab === "analytics") return;
+    if (!profileUser || isLoading) return;
+    isLoading = true;
+
+    const profileLoading = document.getElementById("profile-loading");
+    const profileEmpty = document.getElementById("profile-empty");
+    const gadsList = document.getElementById("profile-gads-list");
+    const loadMoreSection = document.getElementById("profile-load-more");
+
+    if (currentPage === 1) {
+      profileLoading.classList.remove("gt-hidden");
+      profileEmpty.classList.add("gt-hidden");
+      gadsList.innerHTML = "";
+    }
+
+    try {
+      let response;
+      // Load different content based on current tab
+      switch (currentTab) {
+        case "replies":
+          response = await window.GadTalkAPI.gads.getUserReplies(profileUser.id, currentPage);
+          break;
+        case "likes":
+          response = await window.GadTalkAPI.gads.getUserLikes(profileUser.id, currentPage);
+          break;
+        case "gads":
+        default:
+          response = await window.GadTalkAPI.gads.getByUser(profileUser.id, currentPage);
+          break;
+      }
+
+      const gads = response.gads || [];
+
+      profileLoading.classList.add("gt-hidden");
+
+      if (gads.length === 0 && currentPage === 1) {
+        profileEmpty.classList.remove("gt-hidden");
+        loadMoreSection.classList.add("gt-hidden");
+      } else {
+        profileEmpty.classList.add("gt-hidden");
+        window.gadTalkGads.renderGads(gads, gadsList, currentUser?.id, currentPage > 1);
+
+        hasMore = response.hasMore !== false && gads.length > 0;
+        if (hasMore) {
+          loadMoreSection.classList.remove("gt-hidden");
+        } else {
+          loadMoreSection.classList.add("gt-hidden");
+        }
+      }
+    } catch (error) {
+      profileLoading.classList.add("gt-hidden");
+      window.gadTalkGads.showToast("Failed to load gads", "error");
+    } finally {
+      isLoading = false;
+    }
+  }
+
+  /**
+   * Load analytics charts for the profile
+   */
+  async function loadProfileCharts() {
+    if (!profileUser || !window.gadTalkCharts || !window.gadTalkCharts.loadUserCharts) return;
+    await window.gadTalkCharts.loadUserCharts(profileUser.id);
+  }
+
+  /**
+   * Setup compose modal
+   */
+  function setupComposeModal() {
+    const composeBtn = document.getElementById("compose-btn");
+    const composeModal = document.getElementById("compose-modal");
+
+    if (!composeBtn || !composeModal) return;
+
+    // Update compose avatar
+    const modalComposeAvatar = document.getElementById("modal-compose-avatar");
+    if (modalComposeAvatar && currentUser) {
+      modalComposeAvatar.innerHTML = window.gadTalkGads.getAvatarHtml(currentUser, "md");
+    }
+
+    composeBtn.addEventListener("click", () => {
+      composeModal.classList.remove("gt-hidden");
+    });
+
+    composeModal.querySelectorAll("[data-close-modal]").forEach((el) => {
+      el.addEventListener("click", () => {
+        composeModal.classList.add("gt-hidden");
+      });
+    });
+
+    // Initialize compose form
+    window.gadTalkGads.initComposeForm(
+      "modal-compose-form",
+      "modal-compose-textarea",
+      "modal-char-count",
+      "modal-post-btn"
+    );
+  }
+
+  /**
+   * Setup edit profile modal
+   */
+  function setupEditProfileModal() {
+    const modal = document.getElementById("edit-profile-modal");
+    if (!modal) return;
+
+    modal.querySelectorAll("[data-close-modal]").forEach((el) => {
+      el.addEventListener("click", () => {
+        modal.classList.add("gt-hidden");
+      });
+    });
+
+    // Bio character count
+    const bioTextarea = document.getElementById("edit-bio");
+    const bioCharCount = document.getElementById("bio-char-count");
+    if (bioTextarea && bioCharCount) {
+      bioTextarea.addEventListener("input", () => {
+        const remaining = 160 - bioTextarea.value.length;
+        bioCharCount.textContent = remaining;
+        bioCharCount.classList.toggle("gt-warning", remaining < 20);
+        bioCharCount.classList.toggle("gt-danger", remaining < 0);
+      });
+    }
+
+    // Form submission
+    const form = document.getElementById("edit-profile-form");
+    if (form) {
+      form.addEventListener("submit", handleEditProfileSubmit);
+    }
+
+    // Avatar and banner controls
+    const changeAvatarBtn = document.getElementById("change-avatar-btn");
+    const changeBannerBtn = document.getElementById("change-banner-btn");
+    const chooseAvatarBtn = document.getElementById("choose-avatar-gallery-btn");
+    const avatarGalleryModal = document.getElementById("avatar-gallery-modal");
+    const avatarGalleryList = document.getElementById("avatar-gallery-list");
+    const avatarHidden = document.getElementById("edit-avatar");
+    const bannerHidden = document.getElementById("edit-banner");
+    const avatarUrlInput = document.getElementById("edit-avatar-url");
+    const bannerUrlInput = document.getElementById("edit-banner-url");
+    const avatarPreview = document.getElementById("edit-avatar-preview");
+    const bannerPreview = document.getElementById("edit-banner-preview");
+    const avatarDropdown = document.getElementById("edit-avatar-dropdown");
+
+    // Load avatar dropdown options from API
+    async function loadAvatarDropdownOptions() {
+      if (!avatarDropdown) return;
+      try {
+        const res = await fetch("/api/images/user");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          // Clear existing options except the first placeholder
+          avatarDropdown.innerHTML = '<option value="">-- Select from gallery --</option>';
+          data.forEach((filename) => {
+            const option = document.createElement("option");
+            option.value = `/data/users/${filename}`;
+            option.textContent = filename;
+            avatarDropdown.appendChild(option);
+          });
+        }
+      } catch (error) {
+        window.gadTalkGads.showToast("Failed to load avatar options", "error");
+      }
+    }
+
+    // Load dropdown options on page load
+    loadAvatarDropdownOptions();
+
+    // Handle avatar dropdown selection
+    if (avatarDropdown) {
+      avatarDropdown.addEventListener("change", (e) => {
+        const val = e.target.value;
+        if (val) {
+          if (avatarHidden) avatarHidden.value = val;
+          if (avatarUrlInput) avatarUrlInput.value = "";
+          if (avatarPreview) {
+            avatarPreview.innerHTML = `<img src='${val}' width='64' height='64' style='border-radius:50%; object-fit:cover;'/>`;
+          }
+        }
+      });
+    }
+
+    // Open avatar URL input when change avatar clicked
+    if (changeAvatarBtn && avatarUrlInput) {
+      changeAvatarBtn.addEventListener("click", () => {
+        avatarUrlInput.focus();
+      });
+    }
+
+    // Focus or open banner URL input when change banner clicked
+    if (changeBannerBtn && bannerUrlInput) {
+      changeBannerBtn.addEventListener("click", () => {
+        bannerUrlInput.focus();
+      });
+    }
+
+    // Open gallery modal
+    if (chooseAvatarBtn && avatarGalleryModal) {
+      chooseAvatarBtn.addEventListener("click", async () => {
+        avatarGalleryModal.classList.remove("gt-hidden");
+        // Load images if not loaded
+        if (avatarGalleryList && avatarGalleryList.children.length === 0) {
+          try {
+            const res = await fetch("/api/gad-talk/users/gallery");
+            const data = await res.json();
+            const files = data.files || [];
+            files.forEach((src) => {
+              const img = document.createElement("img");
+              img.src = src;
+              img.alt = "avatar";
+              img.style.width = "64px";
+              img.style.height = "64px";
+              img.style.objectFit = "cover";
+              img.style.borderRadius = "50%";
+              img.style.cursor = "pointer";
+              img.addEventListener("click", () => {
+                if (avatarHidden) avatarHidden.value = src;
+                if (avatarUrlInput) avatarUrlInput.value = src;
+                if (avatarPreview)
+                  avatarPreview.innerHTML = `<img src='${src}' width='64' height='64' style='border-radius:50%; object-fit:cover;'/>`;
+                avatarGalleryModal.classList.add("gt-hidden");
+              });
+              avatarGalleryList.appendChild(img);
+            });
+          } catch (error) {
+            window.gadTalkGads.showToast("Failed to load avatar gallery", "error");
+          }
+        }
+      });
+    }
+
+    // Close gallery modal
+    if (avatarGalleryModal) {
+      avatarGalleryModal.querySelectorAll("[data-close-modal]").forEach((el) => {
+        el.addEventListener("click", () => avatarGalleryModal.classList.add("gt-hidden"));
+      });
+    }
+
+    // On avatar URL change update hidden input & preview
+    if (avatarUrlInput) {
+      avatarUrlInput.addEventListener("input", (e) => {
+        const val = e.target.value.trim();
+        if (avatarHidden) avatarHidden.value = val;
+        if (avatarPreview)
+          avatarPreview.innerHTML = val
+            ? `<img src='${val}' width='64' height='64' style='border-radius:50%; object-fit:cover;'/>`
+            : window.gadTalkGads.getAvatarHtml(profileUser, "lg");
+        // Clear dropdown selection when user types custom URL
+        if (avatarDropdown) avatarDropdown.value = "";
+      });
+    }
+
+    // On banner URL change update hidden input & preview
+    if (bannerUrlInput) {
+      bannerUrlInput.addEventListener("input", (e) => {
+        const val = e.target.value.trim();
+        if (bannerHidden) bannerHidden.value = val;
+        if (bannerPreview) bannerPreview.style.backgroundImage = val ? `url(${val})` : "";
+      });
+    }
+  }
+
+  /**
+   * Open edit profile modal
+   */
+  function openEditModal() {
+    const modal = document.getElementById("edit-profile-modal");
+    if (!modal || !profileUser) return;
+
+    // Populate form
+    const displayNameInput = document.getElementById("edit-display-name");
+    const bioInput = document.getElementById("edit-bio");
+    const locationInput = document.getElementById("edit-location");
+    const websiteInput = document.getElementById("edit-website");
+    const avatarPreview = document.getElementById("edit-avatar-preview");
+    const bannerPreview = document.getElementById("edit-banner-preview");
+    const avatarHidden = document.getElementById("edit-avatar");
+    const bannerHidden = document.getElementById("edit-banner");
+    const avatarUrlInput = document.getElementById("edit-avatar-url");
+    const bannerUrlInput = document.getElementById("edit-banner-url");
+
+    if (displayNameInput) displayNameInput.value = profileUser.displayName || "";
+    if (bioInput) {
+      bioInput.value = profileUser.bio || "";
+      const bioCharCount = document.getElementById("bio-char-count");
+      if (bioCharCount) bioCharCount.textContent = 160 - (profileUser.bio?.length || 0);
+    }
+    if (locationInput) locationInput.value = profileUser.location || "";
+    if (websiteInput) websiteInput.value = profileUser.website || "";
+    if (avatarPreview) avatarPreview.innerHTML = window.gadTalkGads.getAvatarHtml(profileUser, "lg");
+    if (avatarHidden) avatarHidden.value = profileUser.avatar || "";
+
+    // Check if avatar is from gallery (starts with /data/users/)
+    const avatarDropdown = document.getElementById("edit-avatar-dropdown");
+    const currentAvatar = profileUser.avatar || "";
+    const isGalleryAvatar = currentAvatar.startsWith("/data/users/");
+
+    if (isGalleryAvatar) {
+      // Avatar is from gallery - select in dropdown, clear URL input
+      if (avatarDropdown) avatarDropdown.value = currentAvatar;
+      if (avatarUrlInput) avatarUrlInput.value = "";
+    } else {
+      // Avatar is custom URL - fill URL input, clear dropdown
+      if (avatarUrlInput) avatarUrlInput.value = currentAvatar;
+      if (avatarDropdown) avatarDropdown.value = "";
+    }
+
+    if (bannerPreview && profileUser.header) {
+      bannerPreview.style.backgroundImage = `url(${profileUser.header})`;
+    }
+    if (bannerHidden) bannerHidden.value = profileUser.header || "";
+    if (bannerUrlInput) bannerUrlInput.value = profileUser.header || "";
+
+    modal.classList.remove("gt-hidden");
+  }
+
+  /**
+   * Handle edit profile form submission
+   */
+  async function handleEditProfileSubmit(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const updates = {
+      displayName: form.displayName.value.trim(),
+      bio: form.bio.value.trim(),
+      location: form.location.value.trim(),
+      website: form.website.value.trim(),
+    };
+
+    // avatar and banner/header
+    const avatarVal = document.getElementById("edit-avatar")?.value?.trim();
+    const bannerVal = document.getElementById("edit-banner")?.value?.trim();
+    if (avatarVal !== undefined && avatarVal !== null) {
+      updates.avatar = avatarVal || null;
+    }
+    if (bannerVal !== undefined && bannerVal !== null) {
+      // GadTalk backend expects 'header' field
+      updates.header = bannerVal || null;
+    }
+
+    try {
+      const response = await window.GadTalkAPI.users.updateProfile(updates, profileUser.id);
+      // GadTalk API returns { ok: true, data: user }
+      const user = (response && (response.data || response.user)) || response;
+      profileUser = { ...profileUser, ...user };
+      currentUser = { ...currentUser, ...user };
+
+      updateProfileUI();
+      document.getElementById("edit-profile-modal").classList.add("gt-hidden");
+      window.gadTalkGads.showToast("Profile updated!");
+    } catch (error) {
+      window.gadTalkGads.showToast("Failed to update profile", "error");
+    }
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+
+  // Public API
+  return {
+    init,
+    loadProfile,
+    loadProfileGads,
+    loadProfileCharts,
+    setActiveTab,
+  };
+})();
+
+// Export for use in other scripts
+window.gadTalkProfile = gadTalkProfile;

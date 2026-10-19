@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>🦎 GAD</title>
+  <link rel="icon" href="/data/icons/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="/css/fontawesome/css/all.min.css" rel="stylesheet" />
+  <link href="/css/fonts/fonts.css" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/controls.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/infoBoxes.css" />
+  <style>
+    /* Chaos Engine tiny badge and dice styling */
+    .chaos-engine {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-left: 0.15rem;
+      padding: 0.15rem 0.15rem;
+      border-radius: 8px;
+      color: #ce0606;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      cursor: default;
+      font-weight: 600;
+    }
+
+    .chaos-engine .fa-dice {
+      color: #d60c0c;
+      text-shadow: 0 0 8px rgba(146, 13, 13, 0.25);
+      transform-origin: center;
+      display: inline-block;
+      transition: transform 0.35s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .chaos-engine:hover .fa-dice {
+      animation: dice-roll 0.6s ease;
+    }
+
+    @keyframes dice-roll {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div style="display: grid; grid-template-columns: 4fr 1fr">
+      <h1 id="menu-main"></h1>
+    </div>
+  </header>
+
+  <br />
+  <br />
+  <br />
+  <div class="container page-header" id="pageHeader">
+    <h1>
+      Welcome on <span aria-label="GAD">🦎</span><span style="color: rgb(8, 195, 1)">G</span>UI <span style="color: rgb(8, 195, 1)">A</span>PI
+      <span style="color: rgb(8, 195, 1)">D</span>emo
+    </h1>
+  </div>
+  <div class="container page-subheader" id="pageHeader">
+    <h2>Practice your test automation skills!</h2>
+  </div>
+
+  <div align="center" style="justify-content: center !important">
+    <img src="./data/gad-front-banner.png" id="frontbanner" aria-label="Front banner of GAD application" style="max-width: 200px !important; max-height: 200px !important; margin: 10px; border-radius: 100%;" alt="" />
+  </div>
+  <div align="center" style="justify-content: center !important; display: none">
+    <div id="dbStatusInfoBox" class="simpleErrorBox" style="display: none"></div></br>
+  </div>
+  <div align="center">
+    Choose a module to start practicing:
+  </div>
+  <div class="modules-container">
+    <div class="module">
+      <a href="./articles.html" class="module-link">
+        <div class="module-content">
+          <div style="display: flex; flex-direction: column; height: 100%;">
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+              <i class="fa-regular fa-newspaper fa-2x"></i>
+              <button class="non-button">
+                <h3 class="module-header">Articles</h3>
+              </button>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <span class="module-description">Explore and create testing content!
+                <br /><br />Manage articles, comments, users, flashposts and games
+              </span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="module">
+      <a href="./practice" class="module-link">
+        <div class="module-content">
+          <div style="display: flex; flex-direction: column; height: 100%;">
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+              <i class="fa-solid fa-flask-vial fa-2x"></i>
+              <button class="non-button">
+                <h3 class="module-header">Practice Pages</h3>
+              </button>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <span class="module-description">Special pages to test!<br /><br />Practice on elements states, tables, dynamic IDs, API, popups, charts, iframes and more!</span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="module">
+      <a href="./games" class="module-link">
+        <div class="module-content">
+          <div style="display: flex; flex-direction: column; height: 100%;">
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+              <i class="fa-solid fa-solid fa-table-tennis-paddle-ball fa-2x"></i>
+              <button class="non-button">
+                <h3 class="module-header">Games</h3>
+              </button>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <span class="module-description">Special pages to test!<br /><br />Practice automation on non-standard elements, animations, games, and more!</span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="module">
+      <a href="./book-shop/dashboard.html" class="module-link">
+        <div class="module-content">
+          <div style="display: flex; flex-direction: column; height: 100%;">
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+              <i class="fa-solid fa-book fa-2x"></i>
+              <button class="non-button">
+                <h3 class="module-header">Book Shop</h3>
+              </button>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <span class="module-description">Discover and manage bookstore!<br /><br />Handle books, items, orders, accounts, payments, and roles</span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <div class="module"><span class="new-badge">NEW</span>
+      <a href="./learning/welcome.html" class="module-link">
+        <div class="module-content">
+          <div style="display: flex; flex-direction: column; height: 100%;">
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+              <i class="fa-solid fa-graduation-cap fa-2x"></i>
+              <button class="non-button">
+                <h3 class="module-header">Learning</h3>
+              </button>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <span class="module-description">Explore courses!<br /><br />Handle courses, users, questions, progress, and learning paths</span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+    <!-- <div class="module"><span class="new-badge">NEW</span>
+      <a href="./bug-hatch/" class="module-link">
+        <div class="module-content">
+          <div style="display: flex; flex-direction: column; height: 100%;">
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+              <i class="fa-solid fa-bug fa-2x"></i>
+              <button class="non-button">
+                <h3 class="module-header">Bug Hatch</h3>
+              </button>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <span class="module-description">Track issues like a pro!<br /><br />Manage projects, issues, users, comments, and workflows</span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div> -->
+    <div class="module"><span class="new-badge">NEW</span>
+      <a href="./gad-talk/" class="module-link">
+        <div class="module-content">
+          <div style="display: flex; flex-direction: column; height: 100%;">
+            <div style="flex: 1; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+              <i class="fa-solid fa-comments fa-2x"></i>
+              <button class="non-button">
+                <h3 class="module-header">GadTalk</h3>
+              </button>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+              <span class="module-description">Share your stories, engage in discussions and follow users!<br />
+                <span class="chaos-engine" role="img" aria-label="Chaos Engine">
+                  <i class="fa-solid fa-dice fa-2x"></i>
+                  <span class="chaos-text">With Chaos Engine for extra fun!</span>
+                </span></span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </div>
+  <br />
+  <br />
+  <div class="container" style="align-content: center; display: flex; align-items: center; justify-content: center; font-size: 24px">
+    <a href="https://jaktestowac.pl" style="color: dimgray">
+      <span style="display: flex; align-items: center; justify-self: center; font-size: medium">
+        <img src="/data/icons/favicon.png" style="width: 25px !important; height: 25px !important; padding: 0; border: none" alt="" />&nbsp&nbspjaktestowac.pl
+      </span>
+    </a>
+  </div>
+  <img class="back-img opaq" style="display: none;"></img>
+</body>
+
+<script type="text/javascript" src="/js/common.js"></script>
+<script type="text/javascript" src="/js/header.js"></script>
+<script type="text/javascript" src="/js/dbcheck.js"></script>
+<script type="text/javascript" src="/version.js"></script>
+<script type="text/javascript" src="/username.js"></script>
+<script type="text/javascript" src="/js/darkmode.js"></script>
+<script type="text/javascript" src="/js/message-notifier.js"></script>
+<script type="text/javascript">
+  loadAdditionalFrontPageContent()
+</script>
+
+</html>

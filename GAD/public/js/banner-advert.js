@@ -1,0 +1,226 @@
+let remainingTime = 2;
+let allowedToSkip = false;
+let popupTimer;
+
+const advertArticlesBanner1 = `<div class="popup-overlay">
+<div class="popup-container" style="background-image: url('../images/advert1-bg.jpg'); ">
+
+  <div class="right">
+    <div class="skip-button">Skip in ${remainingTime}s</div>
+
+    <p class="logo">🦎GAD</p>
+    <h2 class="popup-heading">Gain Knowledge</h2>
+    <p class="description">
+      Wide range of articles on various quality related topics. Click the button
+      below to view more details.
+    </p>
+
+    <a href="./articles.html" class="visit-button">Visit Articles</a>
+  </div>
+</div>
+</div>`;
+
+const advertSudokuBanner = `<div class="popup-overlay">
+<div class="popup-container" style="background-image: url('../images/advert2-bg.jpg'); ">
+
+  <div class="right2">
+    <div class="skip-button">Skip in ${remainingTime}s</div>
+
+    <p class="logo">🦎GAD</p>
+    <h2 class="popup-heading">SUDOKU</h2>
+    <p class="description">
+      Play Sudoku 
+      <br>and train your brain🧠!
+      <br>Improve your logical thinking skills. Have fun🎉
+    </p>
+
+    <a href="./sudoku.html" class="visit-button">Play Sudoku</a>
+  </div>
+</div>
+</div>`;
+
+const advertMinesweeperBanner = `<div class="popup-overlay">
+<div class="popup-container" style="background-image: url('../images/advert4-bg.jpg'); ">
+
+  <div class="right2">
+    <div class="skip-button">Skip in ${remainingTime}s</div>
+
+    <p class="logo">🦎GAD</p>
+    <h2 class="popup-heading">MINESWEEPER</h2>
+    <p class="description">
+      Challenge yourself!
+      <br>Uncover the mines without detonating them. Have fun🎉
+    </p>
+
+    <a href="./minesweeper.html" class="visit-button">Play Minesweeper</a>
+  </div>
+</div>
+</div>`;
+
+const advertCommentsBanner = `<div class="popup-overlay">
+<div class="popup-container" style="background-image: url('../images/advert3-bg.jpg'); ">
+
+  <div class="right">
+    <div class="skip-button">Skip in ${remainingTime}s</div>
+
+    <p class="logo">🦎GAD</p>
+    <h2 class="popup-heading">Exchange Thoughts</h2>
+    <p class="description">
+      Share your thoughts and experience with other readers. Click the button
+      below to view the comments.
+    </p>
+
+    <a href="../comments.html" class="visit-button">Visit Comments</a>
+  </div>
+</div>
+</div>`;
+
+const advertStatisticsBanner = `<div class="popup-overlay">
+<div class="popup-container" style="background-image: url('../images/advert5-bg.jpg'); ">
+
+  <div class="right">
+    <div class="skip-button">Skip in ${remainingTime}s</div>
+
+    <p class="logo">🦎GAD</p>
+    <h2 class="popup-heading">World of Charts</h2>
+    <p class="description"> 
+      Check out the statistics of the articles and comments. Click the button
+      below to view the statistics.
+    </p>
+
+    <a href="/stats/stats.html" class="visit-button">Visit Statistics</a>
+  </div>
+</div>
+</div>`;
+
+const advertBookStoreBanner = `<div class="popup-overlay">
+<div class="popup-container" style="background-image: url('../images/advert6-bg.jpg'); ">
+
+  <div class="right" style="color: black;">
+    <div class="skip-button" style="color: white;">Skip in ${remainingTime}s</div>
+    <p class="logo">🦎GAD</p>
+    <h2 class="popup-heading">World of Books!</h2>
+    <p class="description"> 
+      Check out the infinite world of books!<br>
+      Hundreds of books are waiting for you!<br>
+      Click the button to visit the shop 👇
+    </p>
+
+    <a href="/book-shop" class="visit-button">Visit Book Shop!</a>
+  </div>
+</div>
+</div>`;
+
+const advertBookStoreBanner2 = `<div class="popup-overlay">
+<div class="popup-container" style="background-image: url('../images/advert7-bg.jpg'); ">
+
+  <div class="right" style="color: black;">
+    <div class="skip-button" style="color: white;">Skip in ${remainingTime}s</div>
+    <p class="logo">🦎GAD</p>
+    <h2 class="popup-heading">World of Books!</h2>
+    <p class="description"> 
+      Check out the infinite world of books!<br>
+      Hundreds of books are waiting for you!<br>
+      Click the button to visit the shop 👇
+    </p>
+
+    <a href="/book-shop" class="visit-button">Visit Book Shop!</a>
+  </div>
+</div>
+</div>`;
+
+const listOfBanners = [
+  advertArticlesBanner1,
+  advertCommentsBanner,
+  advertStatisticsBanner,
+  advertSudokuBanner,
+  advertMinesweeperBanner,
+  // advertBookStoreBanner,
+  // advertBookStoreBanner2,
+  // advertBookStoreBanner,
+];
+
+function wasSkipped() {
+  // cookie version:
+  // return checkCookie() === "1";
+
+  return checkIfAdvertSkipped();
+}
+
+// function checkCookie() {
+//   var name = "advertCookie=";
+//   var cookies = document.cookie.split(";");
+
+//   for (var i = 0; i < cookies.length; i++) {
+//     var cookie = cookies[i];
+//     while (cookie.charAt(0) == " ") {
+//       cookie = cookie.substring(1);
+//     }
+
+//     if (cookie.indexOf(name) === 0) {
+//       return cookie.substring(name.length, cookie.length);
+//     }
+//   }
+//   return "";
+// }
+
+function checkIfAdvertSkipped() {
+  const advert = getLocalStorage("advert");
+  if (advert && advert.skipped === "1" && getDateFromString(advert.expires) > getCurrentDate()) {
+    return true;
+  }
+  return false;
+}
+
+function saveAdvertSkipped(daysOfValidity) {
+  const newTime = addDaysToDateTime(daysOfValidity).toUTCString();
+  // cookie version:
+  // document.cookie = "advertCookie=1; expires=" + newTime + "; SameSite=Lax; path=/";
+
+  const advertObj = { expires: newTime, skipped: "1" };
+  saveLocalStorage("advert", advertObj);
+}
+
+const showAd = () => {
+  const skipButton = document.querySelector(".popup-container .skip-button");
+  const popupOverlay = document.querySelector(".popup-overlay");
+
+  popupOverlay.classList.add("active");
+  popupTimer = setInterval(() => {
+    skipButton.innerHTML = `Skip in ${remainingTime}s`;
+    remainingTime--;
+
+    if (remainingTime < 0) {
+      allowedToSkip = true;
+      skipButton.innerHTML = "Skip";
+      clearInterval(popupTimer);
+    }
+  }, 1000);
+};
+
+const skipAd = () => {
+  const popupOverlay = document.querySelector(".popup-overlay");
+  popupOverlay.classList.remove("active");
+  popupOverlay.remove();
+  saveAdvertSkipped(0.01);
+};
+
+function getRandomBanner() {
+  return listOfBanners[Math.floor(Math.random() * listOfBanners.length)];
+}
+
+function displayAd() {
+  if (wasSkipped() === true) {
+    return;
+  }
+  document.body.insertAdjacentHTML("beforeend", getRandomBanner());
+  showAd();
+  const skipButton = document.querySelector(".popup-container .skip-button");
+  skipButton.addEventListener("click", () => {
+    if (allowedToSkip === true) {
+      skipAd();
+    }
+  });
+}
+
+displayAd();

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>🦎 GAD | BookShop Dashboard</title>
+    <link rel="icon" href="/data/icons/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="/css/fontawesome/css/all.min.css" rel="stylesheet" />
+    <link href="/css/fonts/fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/css/controls.css" />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/infoBoxes.css" />
+    <link rel="stylesheet" href="./css/book-shop-side-panel.css" />
+    <link rel="stylesheet" href="./css/book-shop.css" />
+    <script src="/js/libs/charts/chart.js"></script>
+
+</head>
+
+<body>
+    <header>
+        <div style="display: grid; grid-template-columns: 4fr 1fr" class="main-nav-menu">
+            <h1 id="menu-main-gui-book-shop" class="nav-menu"></h1>
+        </div>
+    </header>
+
+    <br />
+    <br />
+    <br />
+    <div id="side-panel" class="sidepanel">
+    </div>
+    <div align="center">
+        <h2 style="padding: 2px; margin-bottom: 2px;font-size: 20px;">BookShop Dashboard</h2>
+    </div>
+    <div id="dashboard-base-info" align="center">
+        <div class="container" id="pageHeader" style="font-size: 16px;  align-content: center; display: flex; align-items: center; justify-content: center">
+            Welcome to&nbsp;<strong><span aria-label="GAD">🦎</span><span style="color: rgb(8, 195, 1)">B</span>ook <span style="color: rgb(8, 195, 1)">S</span>hop</strong>
+        </div>
+
+        <div align="center" style="justify-content: center !important">
+            <img src="../data/gad-bookshop-logo.png" aria-label="Front banner of GAD BookShop module" style="max-width: 200px !important; max-height: 100px !important; margin: 10px; border-radius: 100%;" alt="" />
+        </div>
+        <div>
+            <strong>What is <span aria-label="GAD">🦎</span><span style="color: rgb(8, 195, 1)">B</span>ook <span style="color: rgb(8, 195, 1)">S</span>hop?</strong>
+        </div>
+        <div style="font-size: 14px;">
+            It is a <strong>module</strong> of <strong><span aria-label="GAD">🦎</span><span style="color: rgb(8, 195, 1)">G</span>UI <span style="color: rgb(8, 195, 1)">A</span>PI
+                <span style="color: rgb(8, 195, 1)">D</span>emo</strong> that allows you to<br>manage books, items, orders, accounts and roles.
+        </div>
+
+        <div class="main-container">
+            <div class="main-links-container">
+                <a href="./books.html" class="main-page-box-link">
+                    <div class="main-page-box">
+                        <i class="fas fa-book box-icon"></i>
+                        <h3 class="main-page-box-header">Books</h3>
+
+                    </div>
+                </a>
+                <a href="./account.html" class="main-page-box-link">
+                    <div class="main-page-box">
+                        <i class="fas fa-user box-icon"></i>
+                        <h3 class="main-page-box-header">Account</h3>
+
+                    </div>
+                </a>
+            </div>
+            <div class="section-description">
+                Requires <strong>Account</strong>:
+            </div>
+            <div class="main-links-container">
+                <a href="./orders.html" class="main-page-box-link">
+                    <div class="main-page-box">
+                        <i class="fas fa-shopping-cart box-icon"></i>
+                        <h3 class="main-page-box-header">Orders</h3>
+                    </div>
+                </a>
+                <a href="./team.html" class="main-page-box-link">
+                    <div class="main-page-box">
+                        <i class="fas fa-users box-icon"></i>
+                        <h3 class="main-page-box-header">Team</h3>
+                    </div>
+                </a>
+                <a href="./payment-history.html" class="main-page-box-link">
+                    <div class="main-page-box">
+                        <i class="fas fa-money-check-alt box-icon"></i>
+                        <h3 class="main-page-box-header">Payment History</h3>
+                    </div>
+                </a>
+            </div>
+            <div class="section-description">
+                Requires <strong>Admin</strong> or <strong>Delivery Coordinator</strong> Role:
+            </div>
+            <div class="main-links-container">
+                <a href="./manage-items.html" class="main-page-box-link">
+                    <div class="main-page-box">
+                        <i class="fas fa-cogs box-icon"></i>
+                        <h3 class="main-page-box-header">Manage All Items</h3>
+
+                    </div>
+                </a>
+                <a href="./manage-orders.html" class="main-page-box-link">
+                    <div class="main-page-box">
+                        <i class="fas fa-tasks box-icon"></i>
+                        <h3 class="main-page-box-header">Manage All Orders</h3>
+
+                    </div>
+                </a>
+            </div>
+            <div class="section-description">
+                Requires <strong>Admin</strong> Role:
+            </div>
+            <div class="main-links-container">
+                <a href="./orders-full-stats.html" class="main-page-box-link">
+                    <div class="main-page-box">
+                        <i class="fas fa-chart-line box-icon"></i>
+                        <h3 class="main-page-box-header">Statistics</h3>
+
+                    </div>
+                </a>
+                <a href="./manage-roles.html" class="main-page-box-link">
+                    <div class="main-page-box">
+                        <i class="fas fa-user-cog box-icon"></i>
+                        <h3 class="main-page-box-header">Manage Roles</h3>
+
+                    </div>
+                </a>
+            </div>
+            <div class="section-description">
+                Sample requirements (for testing purposes):
+            </div>
+            <div class="main-links-container">
+                <a href="./business-requirements.html" class="main-page-box-link">
+                    <div class="main-page-box">
+                        <i class="fas fa-briefcase box-icon"></i>
+                        <h3 class="main-page-box-header">Business Requirements</h3>
+
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div id="dashboard-info" align="center">
+    </div>
+
+</body>
+<script type="text/javascript" src="/js/common.js"></script>
+<script type="text/javascript" src="/js/header.js"></script>
+<script type="text/javascript" src="/version.js"></script>
+<script type="text/javascript" src="/username.js"></script>
+<script type="text/javascript" src="./js/book-common.js"></script>
+<script type="text/javascript" src="./js/book-shop-side-panel.js"></script>
+<script type="text/javascript" src="./js/dashboard.js"></script>
+<script type="text/javascript" src="/js/message-notifier.js"></script>
+<script type="text/javascript">
+    setIconActive('book-shop-dashboard')
+</script>
+
+</html>

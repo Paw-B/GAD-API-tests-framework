@@ -14,12 +14,13 @@
         <maven.compiler.target>25</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <testng.version>7.12.0</testng.version>
-        <allure.version>2.24.0</allure.version>
+        <allure.version>2.35.5</allure.version>
         <spotless.version>2.45.0</spotless.version>
         <aspectj.version>1.9.24</aspectj.version>
-        <rest-assured.version>6.0.1</rest-assured.version>
-        <json-schema-validator>6.0.1</json-schema-validator>
-        <allure-rest-assured.version>2.35.3</allure-rest-assured.version>
+        <rest-assured.version>6.1.0</rest-assured.version>
+        <json-schema-validator>6.1.0</json-schema-validator>
+        <allure-rest-assured.version>2.35.5</allure-rest-assured.version>
+        <jackson.version>2.22.3</jackson.version>
         <owner.version>1.0.12</owner.version>
         <lombok.version>1.18.48</lombok.version>
         <log4j.version>2.26.1</log4j.version>
@@ -74,6 +75,12 @@
             <artifactId>json-schema-validator</artifactId>
             <version>${json-schema-validator}</version>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.github.java-json-tools</groupId>
+                    <artifactId>json-schema-validator</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>io.qameta.allure</groupId>
@@ -99,6 +106,13 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${jackson.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>io.qameta.allure</groupId>
                 <artifactId>allure-bom</artifactId>

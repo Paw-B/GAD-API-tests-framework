@@ -1,0 +1,42 @@
+{
+  "name": "rest-api-demo-v2-tests",
+  "version": "2.0.0",
+  "description": "Tests for GAD",
+  "main": "server.js",
+  "scripts": {
+    "test-schema": "node ./tools/schema-validator.mjs",
+    "test-jest": "cross-env NODE_ENV=test PORT=3002 jest --testTimeout=10000 --detectOpenHandles",
+    "test": "cross-env NODE_ENV=test PORT=3002 mocha test/**/*.spec.js --recursive --require hooks.js",
+    "test-books": "cross-env NODE_ENV=test PORT=3002 mocha test/book-shop/**/*.spec.js --recursive --require hooks.js",
+    "test-learning": "cross-env NODE_ENV=test PORT=3002 mocha test/learning/**/*.spec.js --recursive --require hooks.js",
+    "test-practice": "cross-env NODE_ENV=test PORT=3002 mocha test/practice/**/*.spec.js --recursive --require hooks.js",
+    "testr": "cross-env NODE_ENV=test PORT=3002 mocha --recursive --require hooks.js -R mocha-multi --reporter-options spec=-,xunit=./reports/test-report.xml"
+  },
+  "author": "jaktestowac.pl",
+  "license": "ISC",
+  "engines": {
+    "node": ">=16.x"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.0.2",
+    "chai": "^4.3.8",
+    "cross-env": "^7.0.3",
+    "mocha": "^10.2.0",
+    "mocha-junit-reporter": "^2.2.1",
+    "mocha-multi": "^1.1.7",
+    "supertest": "^6.3.3"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "verbose": true,
+    "setupFilesAfterEnv": [
+      "jest-expect-message"
+    ]
+  },
+  "dependencies": {
+    "@seriousme/openapi-schema-validator": "^2.3.1"
+  }
+}
