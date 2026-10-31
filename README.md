@@ -69,15 +69,9 @@ Edit `src/test/resources/config.properties` as needed. The example points to `ht
 mvn test -DbaseUrl=http://localhost:3000
 ```
 
-## Allure results
+## Allure reports
 
-Allure result files are written to `target/allure-results`. If the Allure command-line tool is installed, generate and open a report with:
-
-```sh
-allure serve target/allure-results
-```
-
-The Maven project also includes the Allure Maven plugin for report-related Maven goals.
+Run the tests first so Allure has result files to render. With the API running and test configuration set as described above.
 
 ## Formatting
 

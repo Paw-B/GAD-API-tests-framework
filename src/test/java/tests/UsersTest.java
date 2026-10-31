@@ -10,10 +10,20 @@ import dto.NewUserData;
 import io.qameta.allure.*;
 import io.restassured.response.Response;
 import models.users.*;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 @Test(testName = "Users API Tests")
 public class UsersTest extends BaseTest {
+
+	@AfterMethod(alwaysRun = true)
+	public void deleteCreatedUser() {
+		if (userId == null || requestBody == null) {
+			return;
+		}
+
+		UsersAdapter.deleteUser(userId, getAccessToken(requestBody));
+		markCreatedUserDeleted(userId);
+	}
 
 	@Feature("Users")
 	@Severity(SeverityLevel.CRITICAL)
@@ -77,9 +87,10 @@ public class UsersTest extends BaseTest {
 	public void verifyDeleteUserRequest() {
 		NewUserData requestBody = createNewUserData();
 		PostCreateUserRs createUserRequest = postCreateUser(requestBody);
-		int userId = createUserRequest.id;
 		String authToken = getAccessToken(requestBody);
+		int userId = createUserRequest.id;
 		int deleteUserResponseCode = deleteUser(userId, authToken);
+		markCreatedUserDeleted(userId);
 
 		assertEquals(deleteUserResponseCode, 200, "Delete user failed");
 		assertEquals(getDeletedUser(userId), 404, "Delete user failed");
