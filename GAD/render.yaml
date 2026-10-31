@@ -1,8 +1,0 @@
-services:
-  - type: web
-    name: GUI API Demo
-    env: node
-    buildCommand: npm i
-    startCommand: npm run start
-    plan: free
-    region: frankfurt
