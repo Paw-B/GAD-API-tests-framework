@@ -11,7 +11,7 @@ This repository contains automated API tests for the [GAD GUI API demo](https://
 - Gson for JSON serialization and deserialization
 - Allure TestNG and Rest Assured integrations for test reporting
 - Log4j 2 for test logging
-- Datafaker for generated user data
+- Data-faker for generated user data
 - OWNER for test configuration
 
 ## Project structure
@@ -19,21 +19,21 @@ This repository contains automated API tests for the [GAD GUI API demo](https://
 ```text
 .
 ├── pom.xml                              # Maven dependencies, Java version, and build plugins
-├── eclipse-formatter.xml                # Java formatting rules used by Spotless
-├── eclipse-formatter.importorder        # Java import ordering used by Spotless
 └── src
     ├── main/java
-    │   ├── dto/                          # Generated user-data DTO and factory
-    │   └── models/                       # Login and users API request/response models
+    │   ├── dto/                          # Generated user and article data DTOs and factories
+    │   └── models/                       # Login, users and articles API request/response models
     └── test
         ├── java
         │   ├── api_adapters/             # Rest Assured request methods and shared specs
         │   ├── config/                   # Base URL configuration interface
         │   ├── listeners/                # Test logging and retry handling
-        │   └── tests/                    # Test base class and Users API tests
+        │   └── tests/                    # Test base class, Users API tests and Articles API tests
         └── resources
             ├── config.properties.example # Example local test configuration
-            ├── json_schemas/             # Schemas for GET user responses
+            ├── json_schemas/             # Schemas for GET user and GET article responses
+            ├── eclipse-formatter.xml     # Java formatting rules used by Spotless
+            ├── eclipse-formatter.importorder # Java import ordering used by Spotless
             ├── allure.properties         # Allure results output location
             ├── api_tests_suit.xml        # TestNG suite descriptor (currently references an old package/group)
             └── log4j2-test.xml           # Test logging configuration
@@ -49,7 +49,15 @@ This repository contains automated API tests for the [GAD GUI API demo](https://
 - `PATCH /api/users/{id}`: logs in, sends an authorized update, then checks changed values.
 - `DELETE /api/users/{id}`: logs in, deletes a created user, and confirms a later lookup returns 404.
 
-The `LoginAdapter` provides `POST /api/login` to obtain the bearer token used by authorized operations. User payloads are generated with Datafaker. `TestListener` attaches a retry analyzer to tests; a test can be retried up to two times, and a failure that passes on retry is removed from the final failed-test results.
+`tests.ArticlesTest` exercises these article API flows. Each test creates its own user, logs in, and removes the articles and user it created afterward:
+
+- `GET /api/articles`: validates the response against `get_articles_schema.json`.
+- `POST /api/articles`: logs in, creates an article, and checks the returned fields, assigned ID and owner.
+- `GET /api/articles/{id}`: retrieves a created article and validates its response schema.
+- `PATCH /api/articles/{id}`: sends an authorized update, then checks changed values.
+- `DELETE /api/articles/{id}`: deletes a created article and confirms a later lookup returns 404.
+
+The `LoginAdapter` provides `POST /api/login` to obtain the bearer token used by authorized operations. User payloads are generated with Data-faker. `TestListener` attaches a retry analyzer to tests; a test can be retried up to two times, and a failure that passes on retry is removed from the final failed-test results.
 
 ## Prerequisites and configuration
 
@@ -57,22 +65,22 @@ The `LoginAdapter` provides `POST /api/login` to obtain the bearer token used by
 - Node to run GAD
 - Maven
 
-The configured base URL is read from the `baseUrl` property. Create a local configuration file from the example and set the URL for your API instance:
+Download [GAD](https://github.com/jaktestowac/gad-gui-api-demo).    
+Follow instruction in README.md file for setup.
 
-```sh
-cp src/test/resources/config.properties.example src/test/resources/config.properties
-```
+The configured base URL is read from the `baseUrl` property.
 
-Edit `src/test/resources/config.properties` as needed. The example points to `http://localhost:3000`. Alternatively, set the base URL on the command line:
-
-```sh
-mvn test -DbaseUrl=http://localhost:3000
-```
+Edit `src/test/resources/config.properties` as needed.  
+The example points to `http://localhost:3000`.  
+Alternatively, set the base URL per your liking.
 
 ## Allure reports
 
 Run the tests first so Allure has result files to render. With the API running and test configuration set as described above.
 
+Then generate the report and open it in your browser using:     
+```mvn allure:serve```.
+
 ## Formatting
 
-Spotless is configured to apply the repository's Eclipse Java formatter during Maven's `validate` phase. The formatter settings are in `eclipse-formatter.xml` and `eclipse-formatter.importorder`.
+Spotless is configured to apply the repository's Eclipse Java formatter during Maven's `validate` phase.

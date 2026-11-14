@@ -148,10 +148,10 @@
                 <configuration>
                     <java>
                         <eclipse>
-                            <file>${project.basedir}/eclipse-formatter.xml</file>
+                            <file>${project.basedir}/src/test/resources/eclipse-formatter.xml</file>
                         </eclipse>
                         <importOrder>
-                            <file>${project.basedir}/eclipse-formatter.importorder</file>
+                            <file>${project.basedir}/src/test/resources/eclipse-formatter.importorder</file>
                         </importOrder>
                     </java>
                 </configuration>

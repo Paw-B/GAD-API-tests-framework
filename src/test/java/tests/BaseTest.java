@@ -1,18 +1,26 @@
 package tests;
 
 import api_adapters.*;
-import dto.NewUserData;
+import dto.*;
 import io.qameta.allure.testng.AllureTestNg;
+import java.util.*;
 import listeners.TestListener;
+import lombok.extern.log4j.Log4j2;
+import models.articles.*;
 import models.login.LoginRq;
 import models.users.*;
 import org.testng.annotations.*;
 
+@Log4j2
 @Listeners({ AllureTestNg.class, TestListener.class })
 public class BaseTest {
 
 	protected Integer userId;
 	protected NewUserData requestBody;
+
+	// Articles created by a test (id -> access token of the owner) so they can be
+	// cleaned up afterwards
+	protected final Map<Integer, String> createdArticles = new LinkedHashMap<>();
 
 	public PostCreateUserRs postCreateUser(NewUserData requestBody) {
 
@@ -72,5 +80,40 @@ public class BaseTest {
 				.build();
 
 		return LoginAdapter.postLogin(loginRequest).accessToken;
+	}
+
+	protected PostCreateArticleRs postCreateArticle(NewArticleData articleData, String accessToken) {
+		PostCreateArticleRq createArticleRequest = toCreateArticleRq(articleData);
+
+		PostCreateArticleRs createdArticle = ArticlesAdapter.createArticle(createArticleRequest, accessToken);
+		createdArticles.put(createdArticle.id, accessToken);
+		return createdArticle;
+	}
+
+	protected PostCreateArticleRq toCreateArticleRq(NewArticleData articleData) {
+		return PostCreateArticleRq
+				.builder()
+				.title(articleData.getTitle())
+				.body(articleData.getBody())
+				.date(articleData.getDate())
+				.image(articleData.getImage())
+				.build();
+	}
+
+	protected void markCreatedArticleDeleted(int articleId) {
+		createdArticles.remove(articleId);
+	}
+
+	// Best effort: a failed article cleanup must not stop the users from being
+	// removed afterwards
+	protected void deleteCreatedArticles() {
+		for (Map.Entry<Integer, String> article : new ArrayList<>(createdArticles.entrySet())) {
+			try {
+				ArticlesAdapter.deleteArticle(article.getKey(), article.getValue());
+			} catch (AssertionError | RuntimeException e) {
+				log.warn("Could not delete article {} during cleanup: {}", article.getKey(), e.getMessage());
+			}
+		}
+		createdArticles.clear();
 	}
 }
