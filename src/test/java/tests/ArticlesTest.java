@@ -18,31 +18,22 @@ public class ArticlesTest extends BaseTest {
 
 	private String ownerToken;
 
-	// Every article needs an authenticated owner, so each test starts with a fresh
-	// user who is logged in
 	@BeforeMethod(alwaysRun = true)
 	public void createArticleOwner() {
 		postCreateUser(createNewUserData());
 		ownerToken = getAccessToken(requestBody);
 	}
 
-	// Articles are removed first (they need their owner's token), then the user
 	@AfterMethod(alwaysRun = true)
 	public void deleteCreatedTestData() {
 		try {
 			deleteCreatedArticles();
 		} finally {
-			deleteArticleOwner();
+			if (userId != null && requestBody != null) {
+				UsersAdapter.deleteUser(userId, getAccessToken(requestBody));
+				markCreatedUserDeleted(userId);
+			}
 		}
-	}
-
-	private void deleteArticleOwner() {
-		if (userId == null || requestBody == null) {
-			return;
-		}
-
-		UsersAdapter.deleteUser(userId, getAccessToken(requestBody));
-		markCreatedUserDeleted(userId);
 	}
 
 	@Feature("Articles")
@@ -75,7 +66,7 @@ public class ArticlesTest extends BaseTest {
 
 	@Feature("Articles")
 	@Severity(SeverityLevel.NORMAL)
-	@Test(testName = "Verify GET /articles/{id} returns article", priority = 2)
+	@Test(testName = "Verify GET /articles/{id} returns one article", priority = 2)
 	public void verifyGetArticleRequest() {
 		NewArticleData articleData = createNewArticleData();
 		PostCreateArticleRs createArticleResponse = postCreateArticle(articleData, ownerToken);

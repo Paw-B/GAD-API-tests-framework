@@ -16,12 +16,9 @@ public class NewArticleDataFactory {
 				faker.lorem().sentence(4),
 				faker.lorem().paragraph(3),
 				articleDate(),
-				".\\data\\images\\256\\test_image_" + (int) (Math.random() * 1000000000 + 1) + ".jpg");
+				".\\data\\images\\article_attachment_test_image_" + (int) (Math.random() * 1000000000 + 1) + ".jpg");
 	}
 
-	// GAD rejects dates "in the future", and its cut-off moves with the UTC
-	// offset of the machine the server runs on. "Now" in UTC gets a 422 when
-	// that machine is west of UTC; one day in the past is accepted everywhere.
 	private static String articleDate() {
 		return Instant.now().minus(1, ChronoUnit.DAYS).truncatedTo(ChronoUnit.SECONDS).toString();
 	}
