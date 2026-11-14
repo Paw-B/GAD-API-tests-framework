@@ -23,17 +23,17 @@ This repository contains automated API tests for the [GAD GUI API demo](https://
 ├── eclipse-formatter.importorder        # Java import ordering used by Spotless
 └── src
     ├── main/java
-    │   ├── dto/                          # Generated user-data DTO and factory
-    │   └── models/                       # Login and users API request/response models
+    │   ├── dto/                          # Generated user and article data DTOs and factories
+    │   └── models/                       # Login, users and articles API request/response models
     └── test
         ├── java
         │   ├── api_adapters/             # Rest Assured request methods and shared specs
         │   ├── config/                   # Base URL configuration interface
         │   ├── listeners/                # Test logging and retry handling
-        │   └── tests/                    # Test base class and Users API tests
+        │   └── tests/                    # Test base class, Users API tests and Articles API tests
         └── resources
             ├── config.properties.example # Example local test configuration
-            ├── json_schemas/             # Schemas for GET user responses
+            ├── json_schemas/             # Schemas for GET user and GET article responses
             ├── allure.properties         # Allure results output location
             ├── api_tests_suit.xml        # TestNG suite descriptor (currently references an old package/group)
             └── log4j2-test.xml           # Test logging configuration
@@ -48,6 +48,14 @@ This repository contains automated API tests for the [GAD GUI API demo](https://
 - `GET /api/users/{id}`: retrieves a created user and validates its response schema.
 - `PATCH /api/users/{id}`: logs in, sends an authorized update, then checks changed values.
 - `DELETE /api/users/{id}`: logs in, deletes a created user, and confirms a later lookup returns 404.
+
+`tests.ArticlesTest` exercises these article API flows. Each test creates its own user, logs in, and removes the articles and user it created afterwards:
+
+- `GET /api/articles`: validates the response against `get_articles_schema.json`.
+- `POST /api/articles`: logs in, creates an article, and checks the returned fields, assigned ID and owner.
+- `GET /api/articles/{id}`: retrieves a created article and validates its response schema.
+- `PATCH /api/articles/{id}`: sends an authorized update, then checks changed values.
+- `DELETE /api/articles/{id}`: deletes a created article and confirms a later lookup returns 404.
 
 The `LoginAdapter` provides `POST /api/login` to obtain the bearer token used by authorized operations. User payloads are generated with Datafaker. `TestListener` attaches a retry analyzer to tests; a test can be retried up to two times, and a failure that passes on retry is removed from the final failed-test results.
 
