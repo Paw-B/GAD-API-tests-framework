@@ -19,8 +19,6 @@ This repository contains automated API tests for the [GAD GUI API demo](https://
 ```text
 .
 ├── pom.xml                              # Maven dependencies, Java version, and build plugins
-├── eclipse-formatter.xml                # Java formatting rules used by Spotless
-├── eclipse-formatter.importorder        # Java import ordering used by Spotless
 └── src
     ├── main/java
     │   ├── dto/                          # Generated user and article data DTOs and factories
@@ -34,6 +32,8 @@ This repository contains automated API tests for the [GAD GUI API demo](https://
         └── resources
             ├── config.properties.example # Example local test configuration
             ├── json_schemas/             # Schemas for GET user and GET article responses
+            ├── eclipse-formatter.xml     # Java formatting rules used by Spotless
+            ├── eclipse-formatter.importorder # Java import ordering used by Spotless
             ├── allure.properties         # Allure results output location
             ├── api_tests_suit.xml        # TestNG suite descriptor (currently references an old package/group)
             └── log4j2-test.xml           # Test logging configuration
@@ -83,4 +83,4 @@ Run the tests first so Allure has result files to render. With the API running a
 
 ## Formatting
 
-Spotless is configured to apply the repository's Eclipse Java formatter during Maven's `validate` phase. The formatter settings are in `eclipse-formatter.xml` and `eclipse-formatter.importorder`.
+Spotless is configured to apply the repository's Eclipse Java formatter during Maven's `validate` phase. The formatter settings are in `src/test/resources/eclipse-formatter.xml` and `src/test/resources/eclipse-formatter.importorder`.
