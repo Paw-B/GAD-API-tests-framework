@@ -18,7 +18,9 @@ This repository contains automated API tests for the [GAD GUI API demo](https://
 
 ```text
 .
+├── AGENTS.md                            # Points AI coding agents to the review skill
 ├── pom.xml                              # Maven dependencies, Java version, and build plugins
+├── skills/gad-code-review/              # Code review skill for AI agents (SKILL.md)
 └── src
     ├── main/java
     │   ├── dto/                          # Generated user and article data DTOs and factories
